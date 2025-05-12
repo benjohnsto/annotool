@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>IIIF Cropping Tool</title>
+  <meta name="description" content="A tool for cropping images from IIIF manifests, developed at the McGraw Center for Teaching and Learning, Princeton University">
+    
+    
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.12.1/font/bootstrap-icons.min.css">
+
+  <script src="assets/js/jquery.min.js"></script>
+  <script src="https://code.jquery.com/ui/1.14.1/jquery-ui.js"></script>
+  <script src="assets/js/converter.js"></script>
+  
+  <!-- jQuery Modal
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-modal/0.9.1/jquery.modal.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-modal/0.9.1/jquery.modal.min.css" /> -->
+  
+  <!-- Tippy -->
+  <script src="https://unpkg.com/popper.js@1"></script>
+  <script src="https://unpkg.com/tippy.js@5"></script>
+
+  <link type="text/css" rel="stylesheet" href="assets/css/style.css">
+  <link rel="shortcut icon" type="image/jpg" href="assets/images/favicon.gif"/>
+</head>
+
+<body>
+
+<div id="header">
+<a href="#" class="sidebar-left"><i class="bi bi-card-list"></i></a> <a href="#" class="sidebar-right"><i class="bi bi-spellcheck"></i></a>
+</div>
+<div id="main" class="">
+    <div id="left">
+    
+        <div id="left-content">
+
+	  <p class='url-element' style="position:relative;display:flex;">
+
+	    <input type="text" id="url" placeholder="Enter the URL of a IIIF manifest." value="" />
+	    <button id="submit" class="btn" style="position:absolute;right:0px;top:0px;height:100%;">Submit</button>
+
+	  </p>
+	  
+	  <p class='output-element' style="position:relative;display:flex;margin-bottom:0px;">
+	    <textarea id="output" rows='4' data-current='0' data-mode='large'></textarea>
+	    <button id="copy" class="btn" style="position:absolute;right:0px;top:0px;font-size:0.8em;display:none;" onClick="javascript:copytext();return false;">Copy</button>
+	  </p>
+	  <p id="mode" style="margin-top:0px;">
+	     <label for="large">
+	       <input id='large' class='setmode' data-mode='large' name='mode' type='radio' value='1' checked='checked'/>
+	       <span>Large</span>
+	     </label>
+	     <label for="small">
+	       <input id='small' class='setmode' data-mode='small' name='mode' type='radio' value='1'/>
+	       <span>Small</span>
+	     </label>	      
+	     <label for="actual">
+	       <input id='actual' class='setmode' data-mode='actual' name='mode' type='radio' value='1'/>
+	       <span>Actual</span>
+	     </label>
+     
+	     <label for="html">
+	       <input id='html' class='setmode' data-mode='html' name='mode' type='radio' value='1'/>
+	       <span>&lt;/&gt;</span>
+	     </label>
+	  </p>	
+	  
+
+
+	  <!--<p><a href="#" class="metadata">View metadata</a></p>-->
+	  <p><div id="gallery"></div></p>
+        </div>
+    </div>
+    <div id="middle">
+       <div id="viewer"></div>
+       <div id="viewer-toolbar" style="position:absolute;top:10px;right:10px;background:#EEE;font-size:1.2em;padding:4px 6px;border:0px;border-radius:5px;">
+         <button id="crop" class="btn">Crop</button>  <button id="addslide" class="btn">OK</button> 
+       </div>  
+    </div>
+    
+    <div id="right">
+      <div id="right-content">
+        <input type='text' class='form-control' placeholder="Tags"/>
+        <textarea class='form-control' rows='15' placeholder='Text' style='margin-top:1em;'></textarea>
+      </div>
+    </div>
+
+
+</div>
+<div id="filmstrip" class="">
+  <div id="filmstrip-control"><a href="#" class="showfilmstrip"><i class="bi bi-three-dots"></i></a></div>
+  <div id="filmstrip-tray"></div>
+</div>
+
+
+
+<!-- -------------- layout ---------------- -->
+
+
+
+
+
+
+  
+  <script src="assets/js/openseadragon/openseadragon.min.js"></script>
+  <script src="assets/js/script.js?v=0.1.8"></script>  
+  <script src="assets/js/functions.js"></script>
+  
+  <!--<script src="assets/js/dropzone.js?v=0.1"></script>-->
+  
+   <script>
+   
+   
+  $( function() {
+    $( ".filmstrip-tray" ).sortable();
+  } );   
+   
+     init();
+
+  </script>  
+ {% include footer.html %}
+</body>
+</html>
