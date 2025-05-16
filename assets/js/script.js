@@ -1,3 +1,6 @@
+
+
+
 	var app = {
 	   'viewer': {},
 	   'manifests': [],
@@ -178,17 +181,22 @@
 	                "service": app.current.service,
 	                "version": app.current.version,
 	                "region": region.join(','),
-	                "large": app.current.service + "/" + region.join(',') + "/1200,/" + app.current.rotation + "/default.jpg",
-	                "small": app.current.service + "/" + region.join(',') + "/,300/" + app.current.rotation + "/default.jpg",
-	                "actual": app.current.service + "/" + region.join(',') + "/" + overlayHeight + ",/" + app.current.rotation + "/default.jpg",
-	                "html": ""
+	                "rotation": app.current.rotation,
+	                "height": app.current.height,
+	                "width": app.current.width,
+	                "outputs": {	                
+	                  "large": app.current.service + "/" + region.join(',') + "/1200,/" + app.current.rotation + "/default.jpg",
+	                  "small": app.current.service + "/" + region.join(',') + "/,300/" + app.current.rotation + "/default.jpg",
+	                  "actual": app.current.service + "/" + region.join(',') + "/" + overlayHeight + ",/" + app.current.rotation + "/default.jpg",
+	                  "html": ""
+	                }
 	            }
 	            if (app.current.version == 3) {
-	                app.outputs.actual = app.current.service + "/" + region.join(',') + "/max/" + app.current.rotation + "/default.jpg";
+	                app.outputs.outputs.actual = app.current.service + "/" + region.join(',') + "/max/" + app.current.rotation + "/default.jpg";
 	            } else {
-	                app.outputs.actual = app.current.service + "/" + region.join(',') + "/full/" + app.current.rotation + "/default.jpg";
+	                app.outputs.outputs.actual = app.current.service + "/" + region.join(',') + "/full/" + app.current.rotation + "/default.jpg";
 	            }
-	            app.outputs.html = "<img alt='detail' src='" + app.outputs.small + "' data-manifest='" + app.current.manifest + "'/>";
+	            app.outputs.outputs.html = "<img alt='detail' src='" + app.outputs.outputs.small + "' data-manifest='" + app.current.manifest + "'/>";
 
 	            updateOutputURLs();
 	        },
@@ -225,7 +233,7 @@
 
 
 	                // if any items in the tray are currently active, remove active class
-	                jQuery(".preview-item.active-item").removeClass('active-item');
+	                jQuery(".filmstrip-item.active-item").removeClass('active-item');
 
 
 	                //construct html of thumbnail in bottom tray
@@ -290,7 +298,7 @@
 	   jQuery("#crop").addClass("activated");
 	   app.selectionMode = true;
 	   app.viewer.setMouseNavEnabled(false);
-	   if (overlay) {
+	   if (app.overlayOn) {
 	         app.viewer.removeOverlay("overlay");
 	   }	   
 	}
@@ -300,7 +308,7 @@
 	   jQuery("#crop").removeClass("activated");
 	   app.selectionMode = false;
 	   app.viewer.setMouseNavEnabled(true);
-	   if (overlay) {
+	   if (app.overlayOn) {
 	      app.viewer.removeOverlay("overlay");
 	   }	   
 	   
@@ -312,22 +320,24 @@
 	 ***********************************/
 
 	jQuery('#addslide').click(function() {
-	
-	console.log(app.outputs);
+
 	
 	   jQuery(".active-item").removeClass('active-item');
 	   var alttext = "detail from " + app.manifests[app.current.manifest].label.replace("'","&apos;");
 
-	   var slide = "<div id='" + app.outputs.id + "' class='filmstrip-item active-item' data-service='" + app.outputs.service + "' data-canvas='" + app.outputs.canvas + "' data-manifest='" + app.outputs.manifest + "'>\
-		    <div>" + app.outputs.html + "</div>\
+console.log(app.outputs);
+
+	   var slide = "<div id='" + app.outputs.id + "' class='filmstrip-item active-item'>\
+		    <div>" + app.outputs.outputs.html + "</div>\
 		    <div class='selectcrop copyable' style='position:absolute;top:0px;left:0px;z-index:-100'>\
-		    <a href='" + app.outputs.manifest + "' title='"+alttext+"' target='_blank'>" + app.outputs.html + "</a>\
+		    <a href='" + app.outputs.manifest + "' title='"+alttext+"' target='_blank'>" + app.outputs.outputs.html + "</a>\
 		    </div>\
 		    <span class='filmstrip-item-tools'>\
 		     <a href='#' class='copyable'><img src='assets/images/copy.svg' class='icon-sm'/></a>\
-		     <a href='#' class='preview-item-metadata'><img src='assets/images/info-circle-white.svg' class='icon-sm'/></a>\
-		     <a href='" + app.outputs.actual + "' class='preview-item-external' target='_blank'><img src='assets/images/external-white.svg' class='icon-sm'/></a>\
-		     <a href='#' class='preview-item-close'><img src='assets/images/x-white.svg' class='icon-sm'/></a></span></div>";
+		     <a href='#' class='filmstrip-item-metadata'><img src='assets/images/info-circle-white.svg' class='icon-sm'/></a>\
+		     <a href='" + app.outputs.outputs.actual + "' class='filmstrip-item-external' target='_blank'><img src='assets/images/external-white.svg' class='icon-sm'/></a>\
+		     <a href='#' class='filmstrip-item-close'><img src='assets/images/x-white.svg' class='icon-sm'/></a></span></div>";
+
 
 	    jQuery("#filmstrip-tray").prepend(slide);	
 	    showFilmstrip();
@@ -371,6 +381,9 @@ version: 2
 	 ***********************************************************/
 
 	jQuery(document).on("click", ".gallery-item", function(e) {
+	
+
+	
 
 	    //app.current.canvas = jQuery(this).attr('data-canvas');
 	    var manifest = jQuery(this).attr('data-manifest');
@@ -381,13 +394,15 @@ version: 2
 	    app.current = {"manifest":manifest, "canvas": canvas, "service": o.service, "version":o.version, "width":o.width,"height":o.height}
 	    	    
 	    
+	    
+	    
 
 	    // highlight this gallery item
 	    jQuery(".gallery-item").removeClass('gallery-item-active');
 	    jQuery(this).addClass('gallery-item-active');
 
 	    // un-hilight any tray thumbs that might be highlighted
-	    jQuery(".filmstrip").removeClass('active-item');
+	    jQuery(".filmstrip-item").removeClass('active-item');
 
 	    jQuery("#crop").removeClass("activated");
 	    app.selectionMode = false;
@@ -430,26 +445,36 @@ version: 2
 
 
 	        // update the urls that appear in the output textarea
-	        app.outputs = {
-	            "manifest": app.current.manifest,
-	            "canvas": app.current.canvas,
-	            "service": app.current.service,
-	            "large": app.current.service + "/full/1200,/0/default.jpg",
-	            "small": app.current.service + "/full/,300/0/default.jpg",
-	            "actual": app.current.service + "/full/full/0/default.jpg",
-	            "html": ""
-	        }
-	        if (app.current.version == 3) {
+       
+	
+            app.outputs = {
+                "id": makeid(),
+                "manifest": app.current.manifest,
+                "canvas": app.current.canvas,
+                "service": app.current.service,
+                "version": app.current.version,
+                "region": "full",
+                "rotation": app.current.rotation,
+                "height": app.current.height,
+                "width": app.current.width,
+                "outputs": {	                
+                  "large": app.current.service + "/full/1200,/" + app.current.rotation + "/default.jpg",
+                  "small": app.current.service + "/full/,300/" + app.current.rotation + "/default.jpg",
+                  "actual": app.current.service + "/full/full/" + app.current.rotation + "/default.jpg",
+                  "html": ""
+                }
+            }		        
+	    if (app.current.version == 3) {
 	            app.outputs.actual = app.current.service + "/full/max/0/default.jpg";
-	        }
+	    }
 
-	        setMode('large');
+	    setMode('large');
 
-		var alttext = app.manifests[app.current.manifest].label.replace("'","&apos;");
+	    var alttext = app.manifests[app.current.manifest].label.replace("'","&apos;");
 	        
-	        app.outputs.html = "<img alt='detail of "+alttext+"' src='" + app.outputs.actual + "' data-manifest='" + app.current.manifest + "'/>";
+	    app.outputs.outputs.html = "<img alt='detail of "+alttext+"' src='" + app.outputs.outputs.actual + "' data-manifest='" + app.current.manifest + "'/>";
 	        
-	        updateOutputURLs();
+	    updateOutputURLs();
 
 
 	    });
@@ -485,7 +510,7 @@ version: 2
 	    jQuery("input[id='" + mode + "']").prop("checked", true);
 	    jQuery("#output").attr("data-mode", mode);
 	    updateOutputURLs();
-	    jQuery(".preview-item.active-item").find(".preview-item-external").attr('href', app.outputs[mode]);
+	    jQuery(".filmstrip-item.active-item").find(".filmstrip-item-external").attr('href', app.outputs[mode]);
 	}	
 
 
@@ -598,7 +623,7 @@ version: 2
 	* remove item from preview bar
 	*****************************************/
 	
-	jQuery(document).on("click", ".preview-item-close", function(e) {
+	jQuery(document).on("click", ".filmstrip-item-close", function(e) {
 	  jQuery(this).parent().parent().remove();
 	  e.preventDefault();
 	});
@@ -610,7 +635,7 @@ version: 2
 	* click on info icon in preview item
 	*****************************************/
 	
-	jQuery(document).on("click", ".preview-item-metadata", function(e) {
+	jQuery(document).on("click", ".filmstrip-item-metadata", function(e) {
 	
 	  var manifest = jQuery(this).parent().parent().attr('data-manifest');
 	  var canvas = jQuery(this).parent().parent().attr('data-canvas');
@@ -646,18 +671,48 @@ version: 2
 	 * click on a preview item in the tray
 	 *************************************************/
 
-	jQuery(document).on("click", ".preview-item", function(e) {
+	jQuery(document).on("click", ".filmstrip-item", function(e) {
 
 	    // highlight this gallery item
-	    jQuery(".preview-item").removeClass('active-item');
+	    jQuery(".filmstrip-item").removeClass('active-item');
 	    jQuery(this).addClass("active-item");
 
 	    var id = jQuery(this).attr('id');
-
+	    
+	    // highlight corresponding canvas
 	    jQuery(".gallery-item").removeClass('gallery-item-active');
-	    jQuery(".gallery-item[data-service='" + app.selections[id].service + "']").addClass('gallery-item-active');
+	    jQuery(".gallery-item[data-service='" + app.selections[id].service + "']").addClass('gallery-item-active');	    
+	    
+	    // load the viewer
+	    app.viewer.open(app.selections[id].service+"/info.json");
+	    
+    
+	    if(app.selections[id].region !== 'full' || app.selections[id].region !== 'max') {
+	            var overlayElement = document.createElement("div");
+	            overlayElement.id = "overlay";
+	            overlayElement.className = "highlight";
 
-	    //re-populate the url text field with the manifest url for this detail
+		    var region = app.outputs.region.split(',');
+
+	            var c = [
+	               (region[0] / app.outputs.width),
+	               (region[1] / app.outputs.height),
+	               (region[2] / app.outputs.width),
+	               (region[3] / app.outputs.height)
+	           ];
+	           
+	            
+	            
+	            app.viewer.addOverlay({
+	                element: overlayElement,
+	                location: new OpenSeadragon.Rect(c[0],c[1],c[2],c[3])
+	            });
+	            app.overlayOn = true;	    
+	    }	    
+	    
+	    
+	    
+            //re-populate the url text field with the manifest url for this detail
 	    var previous_manifest_url = jQuery("#url").val();
 
 	    jQuery("#url").val(app.selections[id].manifest);
@@ -672,6 +727,7 @@ version: 2
 	    //populate the output textarea with whatever mode is currently selected
 	    app.outputs = app.selections[id];
 	    updateOutputURLs();
+
 	});
 
 
