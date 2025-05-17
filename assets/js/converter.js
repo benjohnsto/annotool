@@ -115,9 +115,7 @@ class IIIFConverter {
             for (const canvas of sequence.canvases) {
             
               var canvasID = canvas['@id'];
-              
-              console.log(canvas);
-            
+
               // sometimes canvases don't have images
               if(canvas.images) { 
                  var imageobj = {"id":"","label":"","service":"","type": 2,"thumb":"","height":canvas.height,"width":canvas.width}

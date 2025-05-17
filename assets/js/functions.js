@@ -14,6 +14,20 @@ function init() {
     }
 
 
+    /**************************
+     * tippy tooltip
+     *************************************************/
+
+tippy('.copyable', {
+    trigger: "click",
+    content: "Copied",
+    placement: "left",
+    onShow(instance) {
+        setTimeout(() => {
+            instance.hide();
+        }, 2000);
+    }
+});
 
     /**************************
      * tooltip
@@ -267,7 +281,220 @@ function SelectText(element) {
 	}
 	
 	
+
+
+
+	jQuery(document).on("click", ".copyable", function(e) {
+	    var containerDiv = jQuery(this).parent().parent().find(".selectcrop");
+	    //Make the container Div contenteditable
+	    containerDiv.attr("contenteditable", true);
+	    //Select the image
+	    SelectText(containerDiv.get(0));
+	    //Execute copy Command
+	    //Note: This will ONLY work directly inside a click listener
+	    document.execCommand('copy');
+	    //Unselect the content
+	    window.getSelection().removeAllRanges();
+	    //Make the container Div uneditable again
+	    containerDiv.removeAttr("contenteditable");
+	    //Success!!
+	    console.log("image copied!");
+	});
+
+	jQuery(".sidebar-right").click(function(e){
+	  toggleRightSidebar();
+	  e.preventDefault();
+	});
+
+	jQuery(".sidebar-left").click(function(e){
+	  toggleLeftSidebar();
+	  e.preventDefault();
+	});   
+   
+   
+   
+   jQuery(".annotationpage").click(function(e){
+     var ap = new AnnotationPage(app.selections);
+     ap.create();
+     e.preventDefault();
+   });
+
+	/****************************
+	* remove item from preview bar
+	*****************************************/
+	
+	jQuery(document).on("click", ".filmstrip-item-close", function(e) {
+	  jQuery(this).parent().parent().remove();
+	  e.preventDefault();
+	});
 	
 	
+	
+	
+	/****************************
+	* click on info icon in preview item
+	*****************************************/
+	
+	jQuery(document).on("click", ".filmstrip-item-metadata", function(e) {
+	
+	  var manifest = jQuery(this).parent().parent().attr('data-manifest');
+	  var canvas = jQuery(this).parent().parent().attr('data-canvas');
+	  
+	   // update the urls that go in the 'copy' textarea
+	   updateOutputURLs();
+
+	   var o = app.manifests[manifest];
+
+	   var html = "";
+	   html += "<p><label for='title'>Title:</label> <span id='title'>"+o.label+"</span></p>";
+	   html += "<p><label for='descr'>Description:</label> <span id='descr'>"+o.description+"</span></p>";
+	   
+	   jQuery.each(o.metadata, function(i,v) {
+	     html += "<p><label for='"+v.label+"'>"+v.label+":</label> <span id='"+v.label+"'>"+v.value+"</span></p>";
+	   });
+	   html += "<p><a href='"+manifest+"' target='_blank'><img src='assets/images/iiif.svg' class='icon'/></a></p>";
+	   
+	   html += "<p><strong>Manifest</strong>: "+manifest+"</p>";
+	   html += "<p><strong>Canvas</strong>: "+canvas+"</p>";
+	   html += "<p><strong>Region</strong>: "+region.join(',')+"</p>";
+	   
+	   
+	   
+	   jQuery('#modal_content').html(html);
+	   jQuery('#modal').modal();
+
+	  e.preventDefault();
+	});		
+  	
+  	
+  		/************************************
+	* Load a manifest
+	* to do: if a manifest uses static images, we cannot use this tool
+	* we need to alert the user
+	* an example manifest with static jpgs at https://discover.york.ac.uk/ark:/36941/13192/presentation/3/manifest 
+	*************************************/
+	function load(url) {
+
+
+
+	    // UCLA has an 'ark:' in their urls that need to be encoded
+	    url = url.replace(/ark:\/(.*?)\/full/, function(r, a) {
+	        var parts = a.split('/');
+	        return "ark%3A%2F" + parts.join('%2F')+"/full";
+	    });
+	    url = url.replace(/ark:\/(.*?)\/manifest/, function(r, a) {
+	        var parts = a.split('/');
+	        return "ark%3A%2F" + parts.join('%2F')+"/manifest";
+	    });
+
+	    // if this is an Internet Archive URL
+	    // convert it to a manifest
+	    if (url.indexOf("archive.org") > 0 && url.indexOf("details") > 0) {
+	        url = internetArchive2Manifest(url);
+	    }
+
+
+	    // if this is a IIIF image url, parse it
+	    if (url.search(/\/([0-9]{1,3})\/(color|gray|bitonal|default)\.(png|jpg)/) > 0) {
+	        parseSingleImage(url);
+	    } else {
+
+
+
+	    fetch(url).then(response => {
+			  if (!response.ok) {
+			      throw new Error(response.statusText);
+			  }
+			  return response.json();
+	    })
+	    .then(manifest => {
+	    
+	       var m = new IIIFConverter();
+	       m.load(manifest);
+	       
+	       switch(m.type) {
+	         case "Collection":
+	             //if(m.items.length > 50) { m.items = m.items.slice(0, 49); console.log(m.items); }
+	         
+	             m.items.forEach(function(item) {
+	                 load(item.id);
+	             });
+	         break;
+	         case "Manifest":
+	             app.manifests[url] = m;
+	             addToGallery(url, m);
+	             
+	         break;	         
+	       }
+
+	    });
+
+	    } // end if/else
+
+	}
+
+
+
+
+	/*********************************
+	 * ACTIONS
+	 *******************************/
+
+	// submit a url
+	jQuery("#submit").click(function() {
+	    var url = jQuery("#url").val();
+	    app.current.manifest = url;
+	    jQuery("#gallery").empty();
+	    load(url);
+	});
+	
+	
+	
+	/******************************
+	 *  Set the mode
+	 ********************************/
+	function setMode(mode) {
+	    jQuery("input[id='" + mode + "']").prop("checked", true);
+	    jQuery("#output").attr("data-mode", mode);
+	    updateOutputURLs();
+	    jQuery(".filmstrip-item.active-item").find(".filmstrip-item-external").attr('href', app.current[mode]);
+	}	
+
+
+
+
+	/*************************
+	 * show / hide preview bar
+	 ***********************************/
+
+	jQuery(".showfilmstrip").click(function() {
+	    if (jQuery("#filmstrip").hasClass('shown')) {
+	        hideFilmstrip();
+	    } else {
+	        showFilmstrip();
+	    }
+	});
+	
+	
+	function showFilmstrip() {
+	   jQuery("#filmstrip").addClass('shown');
+	}
+	
+	function hideFilmstrip() {
+	   jQuery("#filmstrip").removeClass('shown');
+	}	
+
+	/************************************
+	 * 
+	 *************************************/
+	function updateOutputURLs() {
+	    var mode = jQuery("#output").attr("data-mode");
+	    jQuery("#output").val(app.current[mode]);
+	    jQuery("#copy").show();
+	}
+
+
+
+
 	
 	
