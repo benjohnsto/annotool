@@ -11,6 +11,7 @@
 	   'annoPage':{}
 	}
 
+	var crop = {};
 
 
 
@@ -102,11 +103,11 @@
 	    // draw overlays
 
 	    new OpenSeadragon.MouseTracker({
-	    
-	        
+
 
 	        element: app.viewer.element,
 	        pressHandler: function(event) {
+
 
 	            if (!app.selectionMode) {
 	                return;
@@ -174,15 +175,15 @@
 	            // update the box    
 	            app.viewer.updateOverlay(drag.overlayElement, location);
 	            
-	            app.current_copy.overlay = location;
+	            crop.overlay = location;
 	            
 		    // update current
-		    app.current_copy.region = region.join(',');
+		    crop.region = region.join(',');
 		    
-		    app.current_copy.large = app.current_copy.service + "/" + region.join(',') + "/1200,/" + app.current_copy.rotation + "/default.jpg";
-		    app.current_copy.small = app.current_copy.service + "/" + region.join(',') + "/,300/" + app.current_copy.rotation + "/default.jpg";
-		    app.current_copy.actual = app.current_copy.service + "/" + region.join(',') + "/"+overlayHeight+"/" + app.current_copy.rotation + "/default.jpg";
-		    app.current_copy.html = "<img alt='detail' src='" + app.current_copy.small + "' data-manifest='" + app.current_copy.manifest + "'/>";
+		    crop.large = crop.service + "/" + region.join(',') + "/1200,/" + crop.rotation + "/default.jpg";
+		    crop.small = crop.service + "/" + region.join(',') + "/,300/" + crop.rotation + "/default.jpg";
+		    crop.actual = crop.service + "/" + region.join(',') + "/"+overlayHeight+"/" + crop.rotation + "/default.jpg";
+		    crop.html = "<img alt='detail' src='" + crop.small + "' data-manifest='" + crop.manifest + "'/>";
 
 	            updateOutputURLs();
 	        },
@@ -234,13 +235,15 @@
 
 	jQuery('#crop').click(function() {
 
-	    app.current_copy = app.current;
-	
+
+	    crop = JSON.parse(JSON.stringify(app.current));
+
 	    if (jQuery("#crop").hasClass("activated")) {
 	      disableCrop();
 	    } else {   
 	      enableCrop();
 	    }
+
 
 	});
 
@@ -252,7 +255,7 @@
 	   if (app.overlayOn) {
 	         app.viewer.removeOverlay("overlay");
 	   }
-	   app.overlayOn = true;  
+	   app.overlayOn = true;
 	}
 	
 	function disableCrop() {
@@ -263,6 +266,7 @@
 	      app.viewer.removeOverlay("overlay");
 	   }	   
 	   app.overlayOn = false;
+	   crop = {};
 	}
 
 
@@ -275,42 +279,47 @@
 
 	jQuery('#addslide').click(function() {
 	
-	    
+	
 
-	    var id = makeid();
+	   var id = makeid();
+	   console.log(crop);
 	   
-
-	    if(app.current_copy != undefined) {
-	       app.selections[id] = app.current_copy;
-	    }
-	    else { 
-
+	   if(!jQuery.isEmptyObject(crop) && crop.region.indexOf(',') > 0) {
+	       console.log("a crop");
+	       app.selections[id] = crop;
+	   }
+	   else { 
 	       app.selections[id] = app.current;	       
-	    }
+	   }
+
+	   
 
 	   jQuery(".active-item").removeClass('active-item');
 	   var alttext = "detail from " + app.manifests[app.current.manifest].label.replace("'","&apos;");
 	   var mirador_link = "https://mcgrawcenter.github.io/mirador/?manifest=" + encodeURI(app.current.manifest) + "&canvas=" + app.current.canvas;
 
 
-	   var slide = "<div id='" + id + "' class='filmstrip-item'>\
-		    <div>" + app.current.html + "</div>\
+	   var slide = "<div id='" + id + "' class='filmstrip-item' data-type=''>\
+		    <div><img alt='detail of "+app.selections[id].label+"' src='"+app.selections[id].small+"' data-manifest='"+app.selections[id].manifest+"'/></div>\
 		    <div class='selectcrop copyable' style='position:absolute;top:0px;left:0px;z-index:-100'>\
-		    <a href='" + app.current.manifest + "' title='"+alttext+"' target='_blank'>" + app.current.html + "</a>\
+		    <a href='" + app.selections[id].manifest + "' title='"+alttext+"' target='_blank'>\
+		    <img alt='detail of "+app.selections[id].label+"' src='"+app.selections[id].small+"' data-manifest='"+app.selections[id].manifest+"'/>\
+		    </a>\
 		    </div>\
 		    <span class='filmstrip-item-tools'>\
 		     <a href='#' class='copyable'><img src='assets/images/copy.svg' class='icon-sm'/></a>\
 		     <a href='#' class='filmstrip-item-metadata'><img src='assets/images/info-circle-white.svg' class='icon-sm'/></a>\
-		     <a href='" + app.current.actual + "' class='filmstrip-item-external' target='_blank'><img src='assets/images/external-white.svg' class='icon-sm'/></a>\
+		     <a href='" + app.selections[id].actual + "' class='filmstrip-item-external' target='_blank'><img src='assets/images/external-white.svg' class='icon-sm'/></a>\
 		     <a href='#' class='filmstrip-item-close'><img src='assets/images/x-white.svg' class='icon-sm'/></a></span></div>";
 
 
 	    jQuery("#filmstrip-tray").prepend(slide);	
 	    showFilmstrip();
 	    updateOutputURLs();
+
+
 	    disableCrop();
-	    delete app.current_copy;
-	    console.log(app);
+	    console.log(crop);
 
 	});
 
@@ -339,7 +348,7 @@
 	    var o = app.canvases[canvas];
 	    
 	    //var alttext = app.manifests[app.current.manifest].label.replace("'","&apos;");
-	    var alttext = "needs work";
+	    var alttext = o.label;
 	    
             app.current = {
                 "manifest": manifest,
@@ -358,6 +367,8 @@
             }
                
 	    if (o.version == 3) { app.current.size = "max"; }
+	    
+	    crop = app.current;
 
 	    // highlight this gallery item
 	    jQuery(".gallery-item").removeClass('gallery-item-active');
@@ -448,11 +459,11 @@
 	    
 	    // load the viewer
 
-	    if(app.current_copy != undefined) { 
+	    if(crop != undefined) { 
 
 	       var tilesource = {
 	   	  type: 'image',
-		  url:  app.current_copy.large
+		  url:  crop.large
 	       }
 	    
 	       app.viewer.open(tilesource);
