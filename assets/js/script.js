@@ -15,7 +15,7 @@
 	   }
 	}
 
-	var crop = {};
+	var working = {};
 
 
 
@@ -89,13 +89,13 @@
 	    });
 
 	    app.viewer.addHandler('rotate', function() {
-	        app.current.rotation = viewer.viewport.getRotation();
+	        working.rotation = viewer.viewport.getRotation();
 
-	        if (app.current.rotation < 0) {
-	            app.current.rotation = 360 + app.current.rotation;
+	        if (working.rotation < 0) {
+	            working.rotation = 360 + working.rotation;
 	        }
-	        if (app.current.rotation == 360) {
-	            app.current.rotation = 0;
+	        if (working.rotation == 360) {
+	            working.rotation = 0;
 	        }
 	    });
 	    
@@ -156,6 +156,8 @@
 	            );
 
 	            var overlayHeight = jQuery("#overlay")[0].clientWidth;
+	            
+	            console.log(app.viewer);
 
 	            var w = app.viewer.tileSources[0].width;
 	            var h = app.viewer.tileSources[0].height;
@@ -179,15 +181,15 @@
 	            // update the box    
 	            app.viewer.updateOverlay(drag.overlayElement, location);
 	            
-	            crop.overlay = location;
+	            working.overlay = location;
 	            
 		    // update current
-		    crop.region = region.join(',');
+		    working.region = region.join(',');
 		    
-		    crop.large = crop.service + "/" + region.join(',') + "/1200,/" + crop.rotation + "/default.jpg";
-		    crop.small = crop.service + "/" + region.join(',') + "/,300/" + crop.rotation + "/default.jpg";
-		    crop.actual = crop.service + "/" + region.join(',') + "/"+overlayHeight+"/" + crop.rotation + "/default.jpg";
-		    crop.html = "<img alt='detail' src='" + crop.small + "' data-manifest='" + crop.manifest + "'/>";
+		    working.large = working.service + "/" + region.join(',') + "/1200,/" + working.rotation + "/default.jpg";
+		    working.small = working.service + "/" + region.join(',') + "/,300/" + working.rotation + "/default.jpg";
+		    working.actual = working.service + "/" + region.join(',') + "/"+overlayHeight+"/" + working.rotation + "/default.jpg";
+		    working.html = "<img alt='detail' src='" + working.small + "' data-manifest='" + working.manifest + "'/>";
 
 	            updateOutputURLs();
 	        },
@@ -240,7 +242,7 @@
 	jQuery('#crop').click(function() {
 
 
-	    crop = JSON.parse(JSON.stringify(app.current));
+	    //working = JSON.parse(JSON.stringify(working));
 
 	    if (jQuery("#crop").hasClass("activated")) {
 	      disableCrop();
@@ -270,7 +272,7 @@
 	      app.viewer.removeOverlay("overlay");
 	   }	   
 	   app.overlayOn = false;
-	   crop = {};
+
 	}
 
 
@@ -308,39 +310,53 @@
 	 ***********************************/
 
 	jQuery('#addslide').click(function(e) {
-         addSlide();
-         e.preventDefault();
+	   var textualbody = jQuery("#textualbody").val();
+	   var tags = jQuery("#tags").val().split(',').map(s => s.trim());
+	   working.textualbody = textualbody;
+	   working.tags = tags;	
+	   addSlide();
+	   e.preventDefault();
 	});
 	
 	
 	function updateSlide() {
 	   var textualbody = jQuery("#textualbody").val();
 	   var tags = jQuery("#tags").val().split(',').map(s => s.trim());
-	   app.selections[id].textualbody = textualbody;
-	   app.selections[id].tags = tags;	   
+	   working.textualbody = textualbody;
+	   working.tags = tags;
+	   toggleRightSidebar();   
 	}
 	
 	
+	
+	
+	
+	
 	function addSlide() {
+	
 	   var id = makeid();
 	   var textualbody = jQuery("#textualbody").val();
 	   var tags = jQuery("#tags").val().split(',').map(s => s.trim());
 
-	   if(!jQuery.isEmptyObject(crop) && crop.region.indexOf(',') > 0) {
-	       app.selections[id] = crop;
+	   if(!jQuery.isEmptyObject(working) && working.region.indexOf(',') > 0) {
+	       app.selections[id] = working;
 	       app.selections[id].crop = true;
 	   }
 	   else { 
-	       app.selections[id] = app.current;
+	       app.selections[id] = working;
 	       app.selections[id].crop = false;	       
 	   }
+
+	// revert working back to original
 
 	   app.selections[id].textualbody = textualbody;
 	   app.selections[id].tags = tags;
 
 	   jQuery(".active-item").removeClass('active-item');
-	   var alttext = "detail from " + app.manifests[app.current.manifest].label.replace("'","&apos;");
-	   var mirador_link = "https://mcgrawcenter.github.io/mirador/?manifest=" + encodeURI(app.current.manifest) + "&canvas=" + app.current.canvas;
+	   
+	   console.log(working);
+	   var alttext = "detail from " + app.manifests[working.manifest].label.replace("'","&apos;");
+	   var mirador_link = "https://mcgrawcenter.github.io/mirador/?manifest=" + encodeURI(working.manifest) + "&canvas=" + working.canvas;
 
 
 	   var slide = "<div id='" + id + "' class='filmstrip-item' data-type=''>\
@@ -360,8 +376,7 @@
 	    jQuery("#filmstrip-tray").prepend(slide);	
 	    showFilmstrip();
 	    updateOutputURLs();
-
-
+	    loadSelection(id);
 	    disableCrop();
 	}
 	
@@ -378,24 +393,60 @@
 	});
 
 
+	function loadSelection(id) {
+	
+	  jQuery(".filmstrip-item").removeClass('active-item');
+	  jQuery("#"+id).addClass('active-item');
+	  
+	  var manifest = jQuery(this).attr('data-manifest');
+	  var canvas =   jQuery(this).attr('data-canvas');
 
+          working = app.selections[id];
+          
+	  if(working.crop == true) { 
+	  
+	      // disable crop here
 
-	/******************
-	 * select a gallery item
-	 ***********************************************************/
-
-	jQuery(document).on("click", ".gallery-item", function(e) {
-
-
-	    var manifest = jQuery(this).attr('data-manifest');
-	    var canvas =   jQuery(this).attr('data-canvas');
+	       var tilesource = {
+	   	  type: 'image',
+		  url:  working.large
+	       }
+	       app.viewer.open(tilesource);
+	    }
+	    else {
+	       app.viewer.open(working.service+"/info.json");
+	    }
+	    // load annotations
+	    jQuery("#textualbody").val(working.textualbody);
+	    jQuery("#tags").val(working.tags.join(','));
 	    
+	    //highlight corresponding canvas
+	    jQuery(".gallery-item").removeClass('active-item');
+	    jQuery(".gallery-item[data-canvas='" + working.canvas + "']").addClass('active-item');
+	    	
+            //re-populate the url text field with the manifest url for this detail
+	    jQuery("#url").val(app.selections[id].manifest);
+
+	    //populate the output textarea with whatever mode is currently selected
+	    updateOutputURLs();
+	}
+	
+	
+	function loadCanvas(canvas, manifest) {
+	
+	  jQuery(".gallery-item").removeClass('active-item');
+	  
+
 	    var o = app.canvases[canvas];
 	    
-	    //var alttext = app.manifests[app.current.manifest].label.replace("'","&apos;");
+	    console.log(canvas);
+	    console.log(app.canvases);
+	    console.log(o);
+	    
+	    //var alttext = app.manifests[working.manifest].label.replace("'","&apos;");
 	    var alttext = o.label;
 	    
-            app.current = {
+            working = {
                 "manifest": manifest,
                 "canvas": canvas,
                 "service": o.service,
@@ -408,16 +459,46 @@
                 "large": o.service + "/full/1200,/0/default.jpg",
                 "small": o.service + "/full/,300/0/default.jpg",
                 "actual": o.service + "/full/full/0/default.jpg",
-                "html": "<img alt='detail of "+alttext+"' src='"+ o.service + "/full/full/0/default.jpg' data-manifest='" + manifest + "'/>"
+                "html": "<img alt='detail of "+alttext+"' src='"+ o.service + "/full/full/0/default.jpg' data-manifest='" + manifest + "'/>",
+                "textualbody":"",
+                "tags":""
             }
                
-	    if (o.version == 3) { app.current.size = "max"; }
-	    
-	    crop = app.current;
+	    if (o.version == 3) { working.size = "max"; }
+          
+	    app.viewer.open(working.service+"/info.json");
 
+	    // load annotations
+	    jQuery("#textualbody").val(working.textualbody);
+	    
+	    jQuery("#tags").val(working.tags);
+	    
+	    //highlight corresponding canvas
+	    jQuery(".gallery-item").removeClass('active-item');
+	    jQuery(".gallery-item[data-canvas='" + working.canvas + "']").addClass('active-item');
+	    	
+            //re-populate the url text field with the manifest url for this detail
+	    jQuery("#url").val(working.manifest);
+
+	    //populate the output textarea with whatever mode is currently selected
+	    updateOutputURLs();
+	}	
+
+
+
+	/******************
+	 * select a gallery item
+	 ***********************************************************/
+
+	jQuery(document).on("click", ".gallery-item", function(e) {
+
+	    var manifest = jQuery(this).attr('data-manifest');
+	    var canvas =   jQuery(this).attr('data-canvas');
+	    loadCanvas(canvas, manifest);
+	    
 	    // highlight this gallery item
-	    jQuery(".gallery-item").removeClass('gallery-item-active');
-	    jQuery(this).addClass('gallery-item-active');
+	    jQuery(".gallery-item").removeClass('active-item');
+	    jQuery(this).addClass('active-item');
 
 	    // un-hilight any tray thumbs that might be highlighted
 	    jQuery(".filmstrip-item").removeClass('active-item');
@@ -427,13 +508,14 @@
 	    app.viewer.setMouseNavEnabled(true);
 
 
-	    jQuery("#image").prop("checked", true);
+	    //jQuery("#image").prop("checked", true);
 
 
-	     app.viewer.open(app.current.service + "/info.json");
+/*
+	    app.viewer.open(working.service + "/info.json");
 	
 
-	    jQuery.get(app.current.service + "/info.json", function(data) {
+	    jQuery.get(working.service + "/info.json", function(data) {
 
 	        app.viewer.open(data);
 	        app.viewer.tileSources.unshift(data);
@@ -442,28 +524,21 @@
 	        // to determine whether we should use 'full' or 'max'
 	        if (typeof data['@context'] != 'undefined') {
 	            if (data['@context'] == 'http://iiif.io/api/image/3/context.json') {
-	                app.current.version = 3;
+	                working.version = 3;
 	            } else {
-	                app.current.version = 2;
+	                working.version = 2;
 	            }
 	        } else {
-	            app.current.version = 2;
+	            working.version = 2;
 	        }
 
-
-	        // i had orignally populate the output textarea with the full url when one clicked on the gallery item
-	        //if(app.max_or_full == 'max') { var full_size = app.current.service+"/full/max/0/default.jpg"; }
-	        //else { var full_size = app.current.service+"/full/full/0/default.jpg"; }
 
 	        var zoom = app.viewer.viewport.getZoom();
 	        var width = app.viewer.tileSources[0].width;
 	        var adjustedwidth = parseInt((width * zoom) * 0.18);
-	        var actual_size = app.current.service + "/full/" + adjustedwidth + ",/0/default.jpg";
+	        var actual_size = working.service + "/full/" + adjustedwidth + ",/0/default.jpg";
 
-
-	        //app.current.rotation = 0;
-	        //app.current.region = "full",
-	        app.current.size = adjustedwidth + ",";
+	        working.size = adjustedwidth + ",";
 
 	        setMode('large');
 
@@ -471,8 +546,8 @@
 
 
 	    });
-
-	    app.mode = 'large';
+*/
+	   // app.mode = 'large';
 	    e.preventDefault();
 	});
 
@@ -489,63 +564,11 @@
 
 	    
 	    // highlight this gallery item
-	    jQuery(".filmstrip-item").removeClass('active-item');
-	    jQuery(this).addClass("active-item");
+	    //jQuery(".filmstrip-item").removeClass('active-item');
+	    //jQuery(this).addClass("active-item");
 
 	    var id = jQuery(this).attr('id');
-	    //app.current = app.selections[id];
-	    
-	    
-	    // highlight corresponding canvas
-	    jQuery(".gallery-item").removeClass('gallery-item-active');
-	    
-
-	    jQuery(".gallery-item[data-service='" + app.selections[id].service + "']").addClass('gallery-item-active');	    
-	    
-	    // load the viewer
-
-	    if(app.selections[id].crop == true) { 
-
-	       var tilesource = {
-	   	  type: 'image',
-		  url:  app.selections[id].large
-	       }
-	    console.log(tilesource);
-	       app.viewer.open(tilesource);
-	    }
-	    else {
-	       app.viewer.open(app.selections[id].service+"/info.json");
-	    }
-
-	    
-
-/*
-	    if(app.selections[id].region.indexOf(',') > 0) {
-
-	            var overlayElement = document.createElement("div");
-	            overlayElement.id = "overlay";
-	            overlayElement.className = "highlight";
-		    app.viewer.addOverlay(overlayElement,app.current.overlay)
-	            app.overlayOn = true;	    
-	    }	    
-	    
-*/	    
-	    
-            //re-populate the url text field with the manifest url for this detail
-	    //var previous_manifest_url = jQuery("#url").val();
-
-	    jQuery("#url").val(app.selections[id].manifest);
-
-	    // if we are changing to a different manifest, reload the gallery of thumbs
-
-/*
-	    if (previous_manifest_url != app.selections[id].manifest) {
-	        load(app.selections[id].manifest);
-	    }
-*/
-	    //populate the output textarea with whatever mode is currently selected
-	    //app.outputs = app.selections[id];
-	    updateOutputURLs();
+    	    loadSelection(id);
 
 	});
 
