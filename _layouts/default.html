@@ -85,15 +85,16 @@
     
     <div id="right">
       <div id="right-content">
-        <input type='text' class='form-control' placeholder="Tags"/>
-        <textarea class='form-control' rows='15' placeholder='Text' style='margin-top:1em;'></textarea>
+        <input id="tags" type='text' class='form-control' placeholder="Tags"/>
+        <textarea id="textualbody" class='form-control' rows='15' placeholder='Text' style='margin-top:1em;'></textarea>
+        <button id="saveannotations" class="btn btn-primary" style="border-radius:5px;">Save</button>
       </div>
     </div>
 
 
 </div>
 <div id="filmstrip" class="">
-  <div id="filmstrip-control"><a href="#" class="showfilmstrip"><i class="bi bi-three-dots"></i></a></div>
+  <div id="filmstrip-control"><a href="#" class="showfilmstrip"><i class="bi bi-three-dots"></i></a><a href="#" class="export" style='font-size:1em;'><i class="bi bi-box-arrow-up-right"></i></a></div>
   <div id="filmstrip-tray"></div>
 </div>
 
@@ -108,6 +109,7 @@
 
   
   <script src="assets/js/openseadragon/openseadragon.min.js"></script>
+  <script src="assets/js/annotation.js"></script>
   <script src="assets/js/script.js?v=0.1.8"></script>  
   <script src="assets/js/functions.js"></script>
   

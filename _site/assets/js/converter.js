@@ -47,10 +47,16 @@ class IIIFConverter {
 	        else if (data["type"] == 'Manifest') {
 	            this.version = 3;
 	            this.parsev3(data);
-	        } else {
+	        }
+	        else if (data["type"] == 'Annotation') {
+	            this.version = 3;
+	            this.parsev3Annotation(data);
+	        }	        
+	        else {
 	            console.log( 'Manifest Format Error', 'The JSON for this Manifest doesnt look like a Manifest. It should have either a type of Manifest but has a type of: ' + data["type"]);
 	        }
 	    } 
+	    
 	    else {
 	        console.log( 'Manifest Format Error', 'The JSON for this Manifest doesnt look like a Manifest. It should have either a @type or type value of Manifest');
 	    }
@@ -362,6 +368,23 @@ class IIIFConverter {
       current_id = id;
   }
   */
+  
+  
+  parsev3Annotation(data) {
+
+    if(data.target.partOf) {
+     this.id = data.id;
+     this.type = "Annotation";
+     this.label = "";
+     
+     // should check if array, if so, iterate
+     var manifest = data.target.partOf.id;
+     this.items.push({'id': manifest})
+
+        
+    }
+  
+  }
 
   
 }

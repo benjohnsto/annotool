@@ -8,7 +8,11 @@
 	   'canvases':{},
 	   'current':{},
 	   'selections':[],
-	   'annoPage':{}
+	   'annoPage':{
+	     'id': 'thisistheid',
+	     'type': 'AnnotationPage',
+	     'items': []
+	   }
 	}
 
 	var crop = {};
@@ -270,29 +274,69 @@
 	}
 
 
+	jQuery(".export").click(function(e){
+	  
+	  var ap = new Annotation();
+	  
+	  console.log(app.selections);
+	  
+	  /*
+	  var textualbody = jQuery("#textualbody").val();
+	  var body = {"type":"TextualBody","value":textualbody,",purpose":"describing","format":"text/html"}
+	  ap.addBody(body);
+	  var tags = jQuery("#tags").val().split(',');
+	  tags.each((tag)=>{
+	    var body = {"type":"TextualBody","value":tag,",purpose":"tagging","format":"text/html"}
+	    ap.addBody(body);
+	  });
+	  
+	  
+	  console.log(ap);
+	  */	
+	  e.preventDefault();
+	});
 
+
+       jQuery("#saveannotations").click(function(e){
+         updateSlide();
+         e.preventDefault();
+       });
 
 
 	/*************************
 	 * add slide
 	 ***********************************/
 
-	jQuery('#addslide').click(function() {
+	jQuery('#addslide').click(function(e) {
+         addSlide();
+         e.preventDefault();
+	});
 	
 	
-
+	function updateSlide() {
+	   var textualbody = jQuery("#textualbody").val();
+	   var tags = jQuery("#tags").val().split(',').map(s => s.trim());
+	   app.selections[id].textualbody = textualbody;
+	   app.selections[id].tags = tags;	   
+	}
+	
+	
+	function addSlide() {
 	   var id = makeid();
-	   console.log(crop);
-	   
+	   var textualbody = jQuery("#textualbody").val();
+	   var tags = jQuery("#tags").val().split(',').map(s => s.trim());
+
 	   if(!jQuery.isEmptyObject(crop) && crop.region.indexOf(',') > 0) {
-	       console.log("a crop");
 	       app.selections[id] = crop;
+	       app.selections[id].crop = true;
 	   }
 	   else { 
-	       app.selections[id] = app.current;	       
+	       app.selections[id] = app.current;
+	       app.selections[id].crop = false;	       
 	   }
 
-	   
+	   app.selections[id].textualbody = textualbody;
+	   app.selections[id].tags = tags;
 
 	   jQuery(".active-item").removeClass('active-item');
 	   var alttext = "detail from " + app.manifests[app.current.manifest].label.replace("'","&apos;");
@@ -319,9 +363,10 @@
 
 
 	    disableCrop();
-	    console.log(crop);
-
-	});
+	}
+	
+	
+	
 
 	/******************************
 	 *  The three output textarea modes
@@ -459,13 +504,13 @@
 	    
 	    // load the viewer
 
-	    if(crop != undefined) { 
+	    if(app.selections[id].crop == true) { 
 
 	       var tilesource = {
 	   	  type: 'image',
-		  url:  crop.large
+		  url:  app.selections[id].large
 	       }
-	    
+	    console.log(tilesource);
 	       app.viewer.open(tilesource);
 	    }
 	    else {

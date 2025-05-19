@@ -376,7 +376,6 @@ function SelectText(element) {
 	function load(url) {
 
 
-
 	    // UCLA has an 'ark:' in their urls that need to be encoded
 	    url = url.replace(/ark:\/(.*?)\/full/, function(r, a) {
 	        var parts = a.split('/');
@@ -409,8 +408,12 @@ function SelectText(element) {
 	    })
 	    .then(manifest => {
 	    
+	    
+	    
 	       var m = new IIIFConverter();
 	       m.load(manifest);
+	       
+
 	       
 	       switch(m.type) {
 	         case "Collection":
@@ -424,7 +427,12 @@ function SelectText(element) {
 	             app.manifests[url] = m;
 	             addToGallery(url, m);
 	             
-	         break;	         
+	         break;
+	         case "Annotation":
+	             m.items.forEach(function(item) {
+	                 load(item.id);
+	             });
+	         break;	         	         
 	       }
 
 	    });

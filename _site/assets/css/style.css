@@ -222,6 +222,7 @@ input[type='text'], textarea {
 
 #filmstrip-control {
   text-align: center;
+  padding:1em;
 }
 #filmstrip-control a {
   color: white; text-decoration:none;
