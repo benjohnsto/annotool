@@ -21,8 +21,8 @@ class Annotation {
      this.body.push(o);
   }
   
-  addTarget() {
-  
+  addTarget(target) {
+    this.target = target;
   }
 
   

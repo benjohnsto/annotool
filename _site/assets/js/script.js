@@ -7,7 +7,7 @@
 	   'manifests': [],
 	   'canvases':{},
 	   'current':{},
-	   'selections':[],
+	   'selections':{},
 	   'annoPage':{
 	     'id': 'thisistheid',
 	     'type': 'AnnotationPage',
@@ -156,8 +156,6 @@
 	            );
 
 	            var overlayHeight = jQuery("#overlay")[0].clientWidth;
-	            
-	            console.log(app.viewer);
 
 	            var w = app.viewer.tileSources[0].width;
 	            var h = app.viewer.tileSources[0].height;
@@ -278,23 +276,42 @@
 
 	jQuery(".export").click(function(e){
 	  
-	  var ap = new Annotation();
+	  for (o in app.selections) {
+
+	     var a = new Annotation();
+	     
+	     
+	     var data = {"type":"Annotation","value":app.selections[o].textualbody,"purpose":"describing","format":"text/html"}
+	     a.addBody(data);
+
+	     if(app.selections[o].tags.length > 2) {
+	     var tagarray = app.selections[o].tags.split(',').map(s => s.trim());
+	     
+
+	     for(t in tagarray){
+	       var tagdata = {"type":"Annotation","value":tagarray[t],"purpose":"tagging","format":"text/html"}
+	       a.addBody(tagdata);	
+	     }	     
+	     }
+	     
+	     var canvas = app.selections[o].canvas;
+	     if(app.selections[o].region.length > 0) { canvas+="#xywh="+app.selections[o].region; }
+	     
+	     var target = {"id":canvas,
+	       "type": "Canvas",
+	       "partOf": {
+	          "id": "https://collections.library.yale.edu/manifests/16740417",
+	          "type": "Manifest"
+	        }
+	     }
+	     
+	     a.addTarget(target);
+     
+	  }
 	  
-	  console.log(app.selections);
 	  
-	  /*
-	  var textualbody = jQuery("#textualbody").val();
-	  var body = {"type":"TextualBody","value":textualbody,",purpose":"describing","format":"text/html"}
-	  ap.addBody(body);
-	  var tags = jQuery("#tags").val().split(',');
-	  tags.each((tag)=>{
-	    var body = {"type":"TextualBody","value":tag,",purpose":"tagging","format":"text/html"}
-	    ap.addBody(body);
-	  });
-	  
-	  
-	  console.log(ap);
-	  */	
+	  console.log(a);
+	
 	  e.preventDefault();
 	});
 
@@ -310,20 +327,16 @@
 	 ***********************************/
 
 	jQuery('#addslide').click(function(e) {
-	   var textualbody = jQuery("#textualbody").val();
-	   var tags = jQuery("#tags").val().split(',').map(s => s.trim());
-	   working.textualbody = textualbody;
-	   working.tags = tags;	
+	   working.textualbody = jQuery("#textualbody").val();
+	   working.tags = jQuery("#tags").val();
 	   addSlide();
 	   e.preventDefault();
 	});
 	
 	
 	function updateSlide() {
-	   var textualbody = jQuery("#textualbody").val();
-	   var tags = jQuery("#tags").val().split(',').map(s => s.trim());
-	   working.textualbody = textualbody;
-	   working.tags = tags;
+	   working.textualbody = jQuery("#textualbody").val();
+	   working.tags = jQuery("#tags").val();
 	   toggleRightSidebar();   
 	}
 	
@@ -336,7 +349,7 @@
 	
 	   var id = makeid();
 	   var textualbody = jQuery("#textualbody").val();
-	   var tags = jQuery("#tags").val().split(',').map(s => s.trim());
+	   var tags = jQuery("#tags").val();
 
 	   if(!jQuery.isEmptyObject(working) && working.region.indexOf(',') > 0) {
 	       app.selections[id] = working;
@@ -354,7 +367,6 @@
 
 	   jQuery(".active-item").removeClass('active-item');
 	   
-	   console.log(working);
 	   var alttext = "detail from " + app.manifests[working.manifest].label.replace("'","&apos;");
 	   var mirador_link = "https://mcgrawcenter.github.io/mirador/?manifest=" + encodeURI(working.manifest) + "&canvas=" + working.canvas;
 
@@ -418,11 +430,12 @@
 	    }
 	    // load annotations
 	    jQuery("#textualbody").val(working.textualbody);
-	    jQuery("#tags").val(working.tags.join(','));
+	    jQuery("#tags").val(working.tags);
 	    
 	    //highlight corresponding canvas
 	    jQuery(".gallery-item").removeClass('active-item');
 	    jQuery(".gallery-item[data-canvas='" + working.canvas + "']").addClass('active-item');
+
 	    	
             //re-populate the url text field with the manifest url for this detail
 	    jQuery("#url").val(app.selections[id].manifest);
@@ -439,9 +452,6 @@
 
 	    var o = app.canvases[canvas];
 	    
-	    console.log(canvas);
-	    console.log(app.canvases);
-	    console.log(o);
 	    
 	    //var alttext = app.manifests[working.manifest].label.replace("'","&apos;");
 	    var alttext = o.label;
@@ -511,8 +521,6 @@
 	    //jQuery("#image").prop("checked", true);
 
 
-/*
-	    app.viewer.open(working.service + "/info.json");
 	
 
 	    jQuery.get(working.service + "/info.json", function(data) {
@@ -546,7 +554,7 @@
 
 
 	    });
-*/
+
 	   // app.mode = 'large';
 	    e.preventDefault();
 	});
@@ -562,10 +570,15 @@
 	jQuery(document).on("click", ".filmstrip-item", function(e) {
 
 
-	    
-	    // highlight this gallery item
-	    //jQuery(".filmstrip-item").removeClass('active-item');
-	    //jQuery(this).addClass("active-item");
+	  // Target element to scroll to
+	  var targetElement = $(".gallery-item[data-canvas='" + working.canvas + "']");
+	  
+
+
+	  $("#gallery").animate({
+	    scrollTop: targetElement[0].offsetTop - 120
+	  }, 1000);
+
 
 	    var id = jQuery(this).attr('id');
     	    loadSelection(id);
