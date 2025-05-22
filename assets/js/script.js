@@ -85,6 +85,7 @@
 	        showFullPageControl: false,
 	        showRotationControl: true,
 	        minZoomLevel: 0.1,
+	        defaultZoomLevel: 0.5,
 	        preserveImageSizeOnResize: true
 	    });
 
@@ -423,6 +424,7 @@
 	   	  type: 'image',
 		  url:  working.large
 	       }
+	       app.viewer
 	       app.viewer.open(tilesource);
 	    }
 	    else {
