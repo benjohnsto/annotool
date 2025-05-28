@@ -416,6 +416,22 @@
 
           working = app.selections[id];
           
+          
+          app.viewer.open(working.service+"/info.json");
+          if(working.crop == true) { 
+            console.log(working.overlay);
+            //app.viewer.addOverlay(working.overlay);
+	            var overlayElement = document.createElement("div");
+	            overlayElement.id = "overlay";
+	            overlayElement.className = "highlight";
+
+	            //var viewportPos = app.viewer.viewport.pointFromPixel(event.position);
+	            app.viewer.addOverlay({
+	                element: overlayElement,
+	                location: working.overlay
+	            });            
+          }
+          /*
 	  if(working.crop == true) { 
 	  
 	      // disable crop here
@@ -430,6 +446,8 @@
 	    else {
 	       app.viewer.open(working.service+"/info.json");
 	    }
+	    
+	    */
 	    // load annotations
 	    jQuery("#textualbody").val(working.textualbody);
 	    jQuery("#tags").val(working.tags);
