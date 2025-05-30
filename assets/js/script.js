@@ -232,6 +232,23 @@
 	        }
 	    });
 
+	function resequenceSelections() {
+	  var newselections = {};
+	  jQuery(".filmstrip-item").each(function(i,v){
+	     var id = jQuery(v).attr('id');
+	     newselections[id] = app.selections[id];
+	  });
+	  app.selections = newselections;
+	}
+
+	/***********************
+	* drag to sort
+	********************************/
+	$( "#filmstrip-tray" ).sortable({
+	      update: function( ) {
+		 resequenceSelections();
+	      }
+	});
 
 
 	/*************************
@@ -276,19 +293,23 @@
 
 
 	jQuery(".export").click(function(e){
+	
+	
+	  resequenceSelections();
+	  
+	  app.annoPage.items = [];
 	  
 	  for (o in app.selections) {
 
 	     var a = new Annotation();
-	     
-	     
+	    
+	    // do the text
 	     var data = {"type":"Annotation","value":app.selections[o].textualbody,"purpose":"describing","format":"text/html"}
 	     a.addBody(data);
 
+	     // do the tags
 	     if(app.selections[o].tags.length > 2) {
 	     var tagarray = app.selections[o].tags.split(',').map(s => s.trim());
-	     
-
 	     for(t in tagarray){
 	       var tagdata = {"type":"Annotation","value":tagarray[t],"purpose":"tagging","format":"text/html"}
 	       a.addBody(tagdata);	
@@ -307,11 +328,15 @@
 	     }
 	     
 	     a.addTarget(target);
-     
+             app.annoPage.items.push(a);
 	  }
 	  
 	  
-	  console.log(a);
+          var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(app.annoPage));
+          var dlAnchorElem = document.getElementById('downloadAnchorElem');
+          dlAnchorElem.setAttribute("href",     dataStr     );
+          dlAnchorElem.setAttribute("download", "annotations.json");
+          dlAnchorElem.click();
 	
 	  e.preventDefault();
 	});
@@ -416,22 +441,6 @@
 
           working = app.selections[id];
           
-          
-          app.viewer.open(working.service+"/info.json");
-          if(working.crop == true) { 
-            console.log(working.overlay);
-            //app.viewer.addOverlay(working.overlay);
-	            var overlayElement = document.createElement("div");
-	            overlayElement.id = "overlay";
-	            overlayElement.className = "highlight";
-
-	            //var viewportPos = app.viewer.viewport.pointFromPixel(event.position);
-	            app.viewer.addOverlay({
-	                element: overlayElement,
-	                location: working.overlay
-	            });            
-          }
-          /*
 	  if(working.crop == true) { 
 	  
 	      // disable crop here
@@ -446,8 +455,6 @@
 	    else {
 	       app.viewer.open(working.service+"/info.json");
 	    }
-	    
-	    */
 	    // load annotations
 	    jQuery("#textualbody").val(working.textualbody);
 	    jQuery("#tags").val(working.tags);

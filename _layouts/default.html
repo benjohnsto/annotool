@@ -23,6 +23,7 @@
 
   <link type="text/css" rel="stylesheet" href="assets/css/style.css">
   <link rel="shortcut icon" type="image/jpg" href="assets/images/favicon.gif"/>
+
 </head>
 
 <body>
@@ -85,8 +86,8 @@
     
     <div id="right">
       <div id="right-content">
-        <textarea id="textualbody" class='form-control' rows='15' placeholder='Text' style='margin-top:1em;'></textarea>
         <input id="tags" type='text' class='form-control' placeholder="Tags"/>
+        <textarea id="textualbody" class='form-control' rows='15' placeholder='Text' style='margin-top:1em;'></textarea>
         <button id="saveannotations" class="btn btn-primary" style="border-radius:5px;">Save</button>
       </div>
     </div>
@@ -94,11 +95,11 @@
 
 </div>
 <div id="filmstrip" class="">
-  <div id="filmstrip-control"><a href="#" class="showfilmstrip"><i class="bi bi-three-dots"></i></a><a href="#" class="export" style='font-size:1em;'><i class="bi bi-box-arrow-up-right"></i></a></div>
+  <div id="filmstrip-control"><span>&nbsp;</span><a href="#" class="showfilmstrip"><i class="bi bi-three-dots"></i></a><a href="#" class="export" style='font-size:1em;padding-top: 0.5em;'><i class="bi bi-box-arrow-up-right"></i></a></div>
   <div id="filmstrip-tray"></div>
 </div>
 
-
+<a id="downloadAnchorElem" style="display:none"></a>
 
 <!-- -------------- layout ---------------- -->
 
@@ -116,11 +117,6 @@
   <!--<script src="assets/js/dropzone.js?v=0.1"></script>-->
   
    <script>
-   
-   
-  $( function() {
-    $( ".filmstrip-tray" ).sortable();
-  } );   
    
      init();
 
