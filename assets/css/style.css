@@ -13,7 +13,7 @@ body {
 
   /* default - left and middle */
   #main #left   { width:25%;left:0%;  }
-  #main #middle { width:75%;left:25%; }
+  #main #middle { width:75%;left:25%; position:relative;}
   #main #right  { width:25%;left:100%; }
   
   
@@ -135,6 +135,32 @@ body {
 #viewer-toolbar a {
  color:white;
 }
+#viewer-prev { 
+position: absolute;
+  left: 0px;
+  bottom: 0px;
+  height: 50%;
+  top: 0px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin: 100px 0;
+ }
+#viewer-next { 
+  position: absolute;
+  right: 0px;
+  bottom: 0px;
+  height: 50%;
+  top: 0px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin: 100px 0;
+ }
+#viewer-next a {color: black;font-size: 1.5em;margin-right: 0.5em;}
+#viewer-prev a {color: black;font-size: 1.5em;margin-left: 0.5em;}
+#viewer-next a.shown {color: white;}
+#viewer-prev a.shown {color: white;}
 
 .highlight {
   border:solid 3px orange;

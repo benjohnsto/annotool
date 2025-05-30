@@ -440,6 +440,21 @@
 	  var canvas =   jQuery(this).attr('data-canvas');
 
           working = app.selections[id];
+          working.selections = Object.keys(app.selections);
+
+          working.next = 0;
+          working.prev = 0;
+          if(working.selections.length > 1) {
+            if(working.selections.indexOf(id) == 0) { working.next = null;working.prev = working.selections[1]; }
+            else if (working.selections.indexOf(id) == (working.selections.length-1)) { working.next = working.selections[(working.selections.length-1)];working.prev = null; }
+            else { working.prev = working.selections[working.selections.indexOf(id) + 1];working.next = working.selections[working.selections.indexOf(id) - 1]; }
+          }
+          else {
+            working.next = null;
+            working.prev = null;
+          }
+          
+          console.log(working.prev, working.next);
           
 	  if(working.crop == true) { 
 	  
@@ -455,6 +470,10 @@
 	    else {
 	       app.viewer.open(working.service+"/info.json");
 	    }
+	    
+	    jQuery(".nextprev.prev").attr('rel',working.prev);
+	    jQuery(".nextprev.next").attr('rel',working.next);
+	    
 	    // load annotations
 	    jQuery("#textualbody").val(working.textualbody);
 	    jQuery("#tags").val(working.tags);
@@ -470,6 +489,18 @@
 	    //populate the output textarea with whatever mode is currently selected
 	    updateOutputURLs();
 	}
+	
+	jQuery(".nextprev.prev").click(function(e){
+	  var target = jQuery(this).attr('rel');
+	  loadSelection(target);
+	  e.preventDefault();
+	});
+	jQuery(".nextprev.next").click(function(e){
+	  var target = jQuery(this).attr('rel');
+	  loadSelection(target);
+	  e.preventDefault();
+	});
+	
 	
 	
 	function loadCanvas(canvas, manifest) {
@@ -599,16 +630,14 @@
 
 	  // Target element to scroll to
 	  var targetElement = $(".gallery-item[data-canvas='" + working.canvas + "']");
-	  
-
-
+	  // scroll accompanying canvas into view
 	  $("#gallery").animate({
 	    scrollTop: targetElement[0].offsetTop - 120
 	  }, 1000);
 
 
-	    var id = jQuery(this).attr('id');
-    	    loadSelection(id);
+	  var id = jQuery(this).attr('id');
+    	  loadSelection(id);
 
 	});
 

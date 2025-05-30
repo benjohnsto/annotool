@@ -232,6 +232,23 @@
 	        }
 	    });
 
+	function resequenceSelections() {
+	  var newselections = {};
+	  jQuery(".filmstrip-item").each(function(i,v){
+	     var id = jQuery(v).attr('id');
+	     newselections[id] = app.selections[id];
+	  });
+	  app.selections = newselections;
+	}
+
+	/***********************
+	* drag to sort
+	********************************/
+	$( "#filmstrip-tray" ).sortable({
+	      update: function( ) {
+		 resequenceSelections();
+	      }
+	});
 
 
 	/*************************
@@ -276,19 +293,23 @@
 
 
 	jQuery(".export").click(function(e){
+	
+	
+	  resequenceSelections();
+	  
+	  app.annoPage.items = [];
 	  
 	  for (o in app.selections) {
 
 	     var a = new Annotation();
-	     
-	     
+	    
+	    // do the text
 	     var data = {"type":"Annotation","value":app.selections[o].textualbody,"purpose":"describing","format":"text/html"}
 	     a.addBody(data);
 
+	     // do the tags
 	     if(app.selections[o].tags.length > 2) {
 	     var tagarray = app.selections[o].tags.split(',').map(s => s.trim());
-	     
-
 	     for(t in tagarray){
 	       var tagdata = {"type":"Annotation","value":tagarray[t],"purpose":"tagging","format":"text/html"}
 	       a.addBody(tagdata);	
@@ -307,11 +328,15 @@
 	     }
 	     
 	     a.addTarget(target);
-     
+             app.annoPage.items.push(a);
 	  }
 	  
 	  
-	  console.log(a);
+          var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(app.annoPage));
+          var dlAnchorElem = document.getElementById('downloadAnchorElem');
+          dlAnchorElem.setAttribute("href",     dataStr     );
+          dlAnchorElem.setAttribute("download", "annotations.json");
+          dlAnchorElem.click();
 	
 	  e.preventDefault();
 	});
@@ -415,23 +440,22 @@
 	  var canvas =   jQuery(this).attr('data-canvas');
 
           working = app.selections[id];
-          
-          
-          app.viewer.open(working.service+"/info.json");
-          if(working.crop == true) { 
-            console.log(working.overlay);
-            //app.viewer.addOverlay(working.overlay);
-	            var overlayElement = document.createElement("div");
-	            overlayElement.id = "overlay";
-	            overlayElement.className = "highlight";
+          working.selections = Object.keys(app.selections);
 
-	            //var viewportPos = app.viewer.viewport.pointFromPixel(event.position);
-	            app.viewer.addOverlay({
-	                element: overlayElement,
-	                location: working.overlay
-	            });            
+          working.next = 0;
+          working.prev = 0;
+          if(working.selections.length > 1) {
+            if(working.selections.indexOf(id) == 0) { working.next = null;working.prev = working.selections[1]; }
+            else if (working.selections.indexOf(id) == (working.selections.length-1)) { working.next = working.selections[(working.selections.length-1)];working.prev = null; }
+            else { working.prev = working.selections[working.selections.indexOf(id) + 1];working.next = working.selections[working.selections.indexOf(id) - 1]; }
           }
-          /*
+          else {
+            working.next = null;
+            working.prev = null;
+          }
+          
+          console.log(working.prev, working.next);
+          
 	  if(working.crop == true) { 
 	  
 	      // disable crop here
@@ -447,7 +471,9 @@
 	       app.viewer.open(working.service+"/info.json");
 	    }
 	    
-	    */
+	    jQuery(".nextprev.prev").attr('rel',working.prev);
+	    jQuery(".nextprev.next").attr('rel',working.next);
+	    
 	    // load annotations
 	    jQuery("#textualbody").val(working.textualbody);
 	    jQuery("#tags").val(working.tags);
@@ -463,6 +489,18 @@
 	    //populate the output textarea with whatever mode is currently selected
 	    updateOutputURLs();
 	}
+	
+	jQuery(".nextprev.prev").click(function(e){
+	  var target = jQuery(this).attr('rel');
+	  loadSelection(target);
+	  e.preventDefault();
+	});
+	jQuery(".nextprev.next").click(function(e){
+	  var target = jQuery(this).attr('rel');
+	  loadSelection(target);
+	  e.preventDefault();
+	});
+	
 	
 	
 	function loadCanvas(canvas, manifest) {
@@ -592,16 +630,14 @@
 
 	  // Target element to scroll to
 	  var targetElement = $(".gallery-item[data-canvas='" + working.canvas + "']");
-	  
-
-
+	  // scroll accompanying canvas into view
 	  $("#gallery").animate({
 	    scrollTop: targetElement[0].offsetTop - 120
 	  }, 1000);
 
 
-	    var id = jQuery(this).attr('id');
-    	    loadSelection(id);
+	  var id = jQuery(this).attr('id');
+    	  loadSelection(id);
 
 	});
 
