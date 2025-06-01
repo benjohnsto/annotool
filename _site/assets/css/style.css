@@ -13,7 +13,7 @@ body {
 
   /* default - left and middle */
   #main #left   { width:25%;left:0%;  }
-  #main #middle { width:75%;left:25%; position:relative;}
+  #main #middle { width:75%;left:25%;}
   #main #right  { width:25%;left:100%; }
   
   
@@ -157,8 +157,8 @@ position: absolute;
   justify-content: center;
   margin: 100px 0;
  }
-#viewer-next a {color: black;font-size: 1.5em;margin-right: 0.5em;}
-#viewer-prev a {color: black;font-size: 1.5em;margin-left: 0.5em;}
+#viewer-next a {color: white;font-size: 1.5em;margin-right: 0.5em;}
+#viewer-prev a {color: white;font-size: 1.5em;margin-left: 0.5em;}
 #viewer-next a.shown {color: white;}
 #viewer-prev a.shown {color: white;}
 

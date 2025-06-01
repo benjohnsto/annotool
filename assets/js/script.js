@@ -208,9 +208,7 @@
 	                // if any items in the tray are currently active, remove active class
 	                jQuery(".filmstrip-item.active-item").removeClass('active-item');
 
-
-
-               // jQuery("#preview").addClass('shown').show();
+               		// jQuery("#preview").addClass('shown').show();
 
 	                // revert output mode back to actual
 	                jQuery("#actual").prop("checked", true);
@@ -440,40 +438,50 @@
 	  var canvas =   jQuery(this).attr('data-canvas');
 
           working = app.selections[id];
-          working.selections = Object.keys(app.selections);
+          working.selections = Object.keys(app.selections).reverse();
 
+	
           working.next = 0;
           working.prev = 0;
+          
+         
+          var index = working.selections.indexOf(id);
+          var last = working.selections.length-1;
+         
           if(working.selections.length > 1) {
-            if(working.selections.indexOf(id) == 0) { working.next = null;working.prev = working.selections[1]; }
-            else if (working.selections.indexOf(id) == (working.selections.length-1)) { working.next = working.selections[(working.selections.length-1)];working.prev = null; }
-            else { working.prev = working.selections[working.selections.indexOf(id) + 1];working.next = working.selections[working.selections.indexOf(id) - 1]; }
+            if(index == 0) { working.prev = working.selections[last]; working.next = working.selections[1];}
+            else if (index == last) { working.prev = working.selections[last-1];working.next = working.selections[0]; }
+            else { working.prev = working.selections[index - 1];working.next = working.selections[index + 1]; }
           }
           else {
             working.next = null;
             working.prev = null;
           }
           
-          console.log(working.prev, working.next);
-          
-	  if(working.crop == true) { 
-	  
-	      // disable crop here
+          console.log(working.selections);
+          console.log(working.prev,working.next);
 
-	       var tilesource = {
-	   	  type: 'image',
-		  url:  working.large
-	       }
-	       app.viewer
-	       app.viewer.open(tilesource);
-	    }
-	    else {
-	       app.viewer.open(working.service+"/info.json");
-	    }
-	    
-	    jQuery(".nextprev.prev").attr('rel',working.prev);
-	    jQuery(".nextprev.next").attr('rel',working.next);
-	    
+	  jQuery(".nextprev.prev").attr('rel',working.prev);
+	  jQuery(".nextprev.next").attr('rel',working.next);
+          
+          //working = app.selections[id];
+          app.viewer.open(working.service+"/info.json");
+
+          if(working.crop==true) { 
+                    app.viewer.removeOverlay("overlay");
+                    app.viewer.removeOverlay("overlaytemp");
+	            var overlayElement = document.createElement("div");
+	            
+	            overlayElement.id = "overlaytemp";
+	            overlayElement.className = "highlight";
+	            console.log(overlayElement);
+	            app.viewer.addOverlay({
+	                element: overlayElement,
+	                location: new OpenSeadragon.Rect(working.overlay.x, working.overlay.y, working.overlay.width, working.overlay.height)
+	            });
+   
+           }
+    
 	    // load annotations
 	    jQuery("#textualbody").val(working.textualbody);
 	    jQuery("#tags").val(working.tags);
@@ -491,13 +499,19 @@
 	}
 	
 	jQuery(".nextprev.prev").click(function(e){
-	  var target = jQuery(this).attr('rel');
-	  loadSelection(target);
+	  if(Object.keys(app.selections).length > 0) {
+	    console.log('prev');
+	    var target = jQuery(this).attr('rel');
+	    console.log(target);
+	    loadSelection(target);
+	  }
 	  e.preventDefault();
 	});
 	jQuery(".nextprev.next").click(function(e){
-	  var target = jQuery(this).attr('rel');
-	  loadSelection(target);
+	  if(Object.keys(app.selections).length > 0) {
+	    var target = jQuery(this).attr('rel');
+	    loadSelection(target);
+	  }
 	  e.preventDefault();
 	});
 	
