@@ -465,6 +465,22 @@
 	  jQuery(".nextprev.next").attr('rel',working.next);
           
           //working = app.selections[id];
+          
+	  if(working.crop == true) { 
+	  
+	      // disable crop here
+
+	       var tilesource = {
+	   	  type: 'image',
+		  url:  working.large
+	       }
+	       app.viewer
+	       app.viewer.open(tilesource);
+	    }
+	    else {
+	       app.viewer.open(working.service+"/info.json");
+	    }              
+          /*
           app.viewer.open(working.service+"/info.json");
 
           if(working.crop==true) { 
@@ -481,7 +497,7 @@
 	            });
    
            }
-    
+    	   */
 	    // load annotations
 	    jQuery("#textualbody").val(working.textualbody);
 	    jQuery("#tags").val(working.tags);
