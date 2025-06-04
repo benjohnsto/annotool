@@ -411,6 +411,7 @@
 
 	    jQuery("#filmstrip-tray").prepend(slide);	
 	    showFilmstrip();
+	    showHidePrevNext();
 	    updateOutputURLs();
 	    loadSelection(id);
 	    disableCrop();
@@ -458,8 +459,6 @@
             working.prev = null;
           }
           
-          console.log(working.selections);
-          console.log(working.prev,working.next);
 
 	  jQuery(".nextprev.prev").attr('rel',working.prev);
 	  jQuery(".nextprev.next").attr('rel',working.next);
@@ -490,7 +489,6 @@
 	            
 	            overlayElement.id = "overlaytemp";
 	            overlayElement.className = "highlight";
-	            console.log(overlayElement);
 	            app.viewer.addOverlay({
 	                element: overlayElement,
 	                location: new OpenSeadragon.Rect(working.overlay.x, working.overlay.y, working.overlay.width, working.overlay.height)
@@ -516,9 +514,7 @@
 	
 	jQuery(".nextprev.prev").click(function(e){
 	  if(Object.keys(app.selections).length > 0) {
-	    console.log('prev');
 	    var target = jQuery(this).attr('rel');
-	    console.log(target);
 	    loadSelection(target);
 	  }
 	  e.preventDefault();
@@ -703,7 +699,7 @@
 	    html += "</ul>";
 	    html += "</div>";
 	    
-	    jQuery("#gallery").append(html);
+	    jQuery("#gallery").prepend(html);
 	    
 	}
 

@@ -324,7 +324,11 @@ function SelectText(element) {
 	*****************************************/
 	
 	jQuery(document).on("click", ".filmstrip-item-close", function(e) {
-	  jQuery(this).parent().parent().remove();
+	  var parent = jQuery(this).parent().parent()
+	  var id = parent.attr('id');
+	  delete app.selections[id];
+	  parent.remove();
+	  
 	  e.preventDefault();
 	});
 	
@@ -452,7 +456,7 @@ function SelectText(element) {
 	jQuery("#submit").click(function() {
 	    var url = jQuery("#url").val();
 	    app.current.manifest = url;
-	    jQuery("#gallery").empty();
+	    //jQuery("#gallery").empty();
 	    load(url);
 	});
 	
@@ -468,7 +472,16 @@ function SelectText(element) {
 	    jQuery(".filmstrip-item.active-item").find(".filmstrip-item-external").attr('href', app.current[mode]);
 	}	
 
-
+	function showHidePrevNext(){
+	  if(Object.keys(app.selections).length > 1) {
+	    jQuery('#viewer-prev').css('display','flex');
+	    jQuery('#viewer-next').css('display','flex');
+	  }
+	  else {
+	    jQuery('#viewer-prev').hide();
+	    jQuery('#viewer-next').hide();
+	  }
+	}
 
 
 	/*************************

@@ -136,12 +136,12 @@ body {
  color:white;
 }
 #viewer-prev { 
-position: absolute;
+  position: absolute;
   left: 0px;
   bottom: 0px;
-  height: 50%;
+  height: 85%;
   top: 0px;
-  display: flex;
+  display: none;
   flex-direction: column;
   justify-content: center;
   margin: 100px 0;
@@ -150,13 +150,16 @@ position: absolute;
   position: absolute;
   right: 0px;
   bottom: 0px;
-  height: 50%;
+  height: 85%;
   top: 0px;
-  display: flex;
+  display: none;
   flex-direction: column;
   justify-content: center;
   margin: 100px 0;
+
  }
+#viewer-next.shown { display: block; }
+#viewer-prev.shown { display: block; }
 #viewer-next a {color: white;font-size: 1.5em;margin-right: 0.5em;}
 #viewer-prev a {color: white;font-size: 1.5em;margin-left: 0.5em;}
 #viewer-next a.shown {color: white;}
