@@ -467,7 +467,8 @@
           
 	  if(working.crop == true) { 
 	  
-	      // disable crop here
+	      // if this is a crop, disable cropping button
+	      jQuery("#crop").addClass('disabled');
 
 	       var tilesource = {
 	   	  type: 'image',
@@ -477,7 +478,9 @@
 	       app.viewer.open(tilesource);
 	    }
 	    else {
-	       app.viewer.open(working.service+"/info.json");
+	      // if this is not a crop, enable cropping button
+	      jQuery("#crop").removeClass('disabled');	    
+	      app.viewer.open(working.service+"/info.json");
 	    }              
           /*
           app.viewer.open(working.service+"/info.json");
@@ -604,12 +607,11 @@
 
 	    //jQuery("#image").prop("checked", true);
 
-
-	
-
 	    jQuery.get(working.service + "/info.json", function(data) {
 
 	        app.viewer.open(data);
+	        // set crop button to enabled
+	        jQuery("#crop").removeClass('disabled');
 	        app.viewer.tileSources.unshift(data);
 
 	        // find out if this is a v2 or v3 image server

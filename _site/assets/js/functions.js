@@ -510,7 +510,7 @@ function SelectText(element) {
 	 *************************************/
 	function updateOutputURLs() {
 	    var mode = jQuery("#output").attr("data-mode");
-	    jQuery("#output").val(app.current[mode]);
+	    jQuery("#output").val(working[mode]);
 	    jQuery("#copy").show();
 	}
 

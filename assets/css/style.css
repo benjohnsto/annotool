@@ -181,6 +181,10 @@ body { margin:0px; }
  background:#BBB;
  color:red;
 }
+#crop.disabled {
+    pointer-events: none;
+    color: #555;
+}
 
 input[type='text'], textarea { 
  padding: 0.5em;
