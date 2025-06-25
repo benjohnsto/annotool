@@ -13,9 +13,7 @@
   <script src="https://code.jquery.com/ui/1.14.1/jquery-ui.js"></script>
   <script src="assets/js/converter.js"></script>
   
-  <!-- jQuery Modal
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-modal/0.9.1/jquery.modal.min.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-modal/0.9.1/jquery.modal.min.css" /> -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mini.css/3.0.1/mini-default.min.css">
   
   <!-- Tippy -->
   <script src="https://unpkg.com/popper.js@1"></script>
@@ -28,19 +26,35 @@
 
 <body>
 
+<div id="banner" style='display:flex;justify-content:space-between'>
+	  <p class='url-element' style="display:flex;width:50%;padding-left:1em;">
+	    <input type="text" id="url" placeholder="Enter the URL of a IIIF manifest." value="" />
+	    <button id="submit" class="primary" style="">Submit</button>
+	  </p>
+	  <div id='banner-toolbar'>
+	    <a href="#" class="carousel"><i class="bi bi-file-earmark-slides icon"></i></a>
+	    <a href="#" class="sidebar-left"><i class="bi bi-card-list icon"></i></a> 
+            <a href="#" class="sidebar-right"><i class="bi bi-spellcheck icon"></i></a>
+            <a href="#" class="importexport icon"><i class="bi bi-file-text"></i></a>
+	  </div>
+</div>
+
 
 <div id="main" class="">
     <div id="left">
     
+    
         <div id="left-content">
+        
+        <!--
+			  <form id="uploadfile" method="post" enctype="multipart/form-data">
+			      <input class='form-control' name="jsonfile" type="file" />
+			      <input class='btn btn-primary' type="submit" value='Upload'/>
+			  </form>
+	-->
 
-	  <p class='url-element' style="position:relative;display:flex;">
 
-	    <input type="text" id="url" placeholder="Enter the URL of a IIIF manifest." value="" />
-	    <button id="submit" class="btn" style="position:absolute;right:0px;top:0px;height:100%;">Submit</button>
-
-	  </p>
-	  
+	  <!--
 	  <p class='output-element' style="position:relative;display:flex;margin-bottom:0px;">
 	    <textarea id="output" rows='4' data-current='0' data-mode='large'></textarea>
 	    <button id="copy" class="btn" style="position:absolute;right:0px;top:0px;font-size:0.8em;display:none;" onClick="javascript:copytext();return false;">Copy</button>
@@ -64,7 +78,7 @@
 	       <span>&lt;/&gt;</span>
 	     </label>
 	  </p>	
-	  
+	  -->
 
 
 	  <!--<p><a href="#" class="metadata">View metadata</a></p>-->
@@ -74,15 +88,11 @@
     <div id="middle">
        <div id="viewer-wrap" style="position:relative">
        <div id="viewer"></div>
-       <div id="viewer-prev"><a href="#" class="nextprev prev" rel=""><i class="bi bi-caret-left-fill"></i></a></div>
-       <div id="viewer-next"><a href="#" class="nextprev next" rel=""><i class="bi bi-caret-right-fill"></i></a></div>
+       <div id="viewer-prev"><a href="#" class="nextprev prev" rel=""><img src='assets/images/prev.png'/></i></a></div>
+       <div id="viewer-next"><a href="#" class="nextprev next" rel=""><img src='assets/images/next.png'/></a></div>
        </div>
        <div id="viewer-toolbar">
-       <a href="#" class="sidebar-left">
-         <i class="bi bi-card-list"></i></a> 
-         <a href="#" class="sidebar-right"><i class="bi bi-spellcheck"></i></a>
-         <a href="#" id="crop"><i class="bi bi-crop"></i></a>
-         <!--<button id="crop" class="btn">Crop</button>   <button id="addslide" class="btn">OK</button>  -->
+         <a href="#" id="crop" class='disabled'><i class="bi bi-crop"></i></a>
          <a href="#" id="addslide"><i class="bi bi-plus-circle"></i></a>
        </div>
 
@@ -99,7 +109,7 @@
 
 </div>
 <div id="filmstrip" class="">
-  <div id="filmstrip-control"><span>&nbsp;</span><a href="#" class="showfilmstrip"><i class="bi bi-three-dots"></i></a><a href="#" class="export" style='font-size:1em;padding-top: 0.5em;'><i class="bi bi-box-arrow-up-right"></i></a></div>
+  <div id="filmstrip-control"><a href="#" class="showfilmstrip"><i class="bi bi-three-dots"></i></a></div>
   <div id="filmstrip-tray"></div>
 </div>
 
@@ -108,15 +118,36 @@
 <!-- -------------- layout ---------------- -->
 
 
+<!-- The Modal -->
+<div id="myModal" class="modal">
+  <!-- Modal content -->
+  <div class="modal-content">
+    <span class="close">&times;</span>  
+    <p>
+      <textarea id="importexport" style='width:99%;height:300px;'></textarea>
+       <a href="#" class="import"><button class='primary'>Import</button></a>
+       <a href="#" class="export"><button class='primary'>Export</button></a>
+    </p>
+  </div>
+</div> 
 
 
 
+<!-- The Modal -->
+<div id="croppingModal" class="modal">
+  <!-- Modal content -->
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    VIEWER
+  </div>
+</div> 
 
   
   <script src="assets/js/openseadragon/openseadragon.min.js"></script>
   <script src="assets/js/annotation.js"></script>
-  <script src="assets/js/script.js?v=0.1.8"></script>  
   <script src="assets/js/functions.js"></script>
+  <script src="assets/js/script.js?v=0.1.8"></script>  
+  
   
   <!--<script src="assets/js/dropzone.js?v=0.1"></script>-->
   

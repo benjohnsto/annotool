@@ -1,3 +1,5 @@
+
+
 function init() {
 
 
@@ -44,18 +46,181 @@ tippy('.copyable', {
     });
 
 
-    /**************************
-     * adjust the height of the gallery to the size of the screen
-     *************************************************/
-    var h = jQuery(window).height();
-    jQuery("#viewer").css("height", h);
-    var e1 = jQuery(".url-element").height();
-    var e2 = jQuery(".output-element").height();
+	/***********************
+	* drag to sort
+	********************************/
+	$( "#filmstrip-tray" ).sortable({
+	      update: function( ) {
+		 resequenceSelections();
+	      }
+	});
 
-    jQuery("#gallery").css("max-height", (h - 190));
-    jQuery(window).resize(function() {
-        jQuery("#viewer").css("height", jQuery(window).height());
-    });
+	    /**************************
+	     * initialize OSD
+	     ********************/
+	    app.viewer = OpenSeadragon({
+	        id: "viewer",
+	        prefixUrl: "assets/js/openseadragon/images/",
+	        tileSources: [],
+	        showFullPageControl: false,
+	        showRotationControl: true,
+	        minZoomLevel: 0.1,
+	        defaultZoomLevel: 0.5,
+	        preserveImageSizeOnResize: true
+	    });
+
+	    app.viewer.addHandler('rotate', function() {
+	        working.rotation = viewer.viewport.getRotation();
+
+	        if (working.rotation < 0) {
+	            working.rotation = 360 + working.rotation;
+	        }
+	        if (working.rotation == 360) {
+	            working.rotation = 0;
+	        }
+	    });
+	    
+	    
+
+	    /*************************** CROPPING **************************/
+
+
+	    // draw overlays
+
+	    new OpenSeadragon.MouseTracker({
+
+
+	        element: app.viewer.element,
+	        pressHandler: function(event) {
+
+
+	            if (!app.selectionMode) {
+	                return;
+	            }
+
+	            if (app.overlayOn) {
+	                app.viewer.removeOverlay("overlay");
+	            }
+	            var overlayElement = document.createElement("div");
+	            overlayElement.id = "overlay";
+	            overlayElement.className = "highlight";
+
+	            var viewportPos = app.viewer.viewport.pointFromPixel(event.position);
+	            app.viewer.addOverlay({
+	                element: overlayElement,
+	                location: new OpenSeadragon.Rect(viewportPos.x, viewportPos.y, 0, 0)
+	            });
+	            app.overlayOn = true;
+	            drag = {
+	                overlayElement: overlayElement,
+	                startPos: viewportPos
+	            };
+
+
+	        },
+	        dragHandler: function(event) {
+
+	            if (typeof drag === 'undefined') {
+	                return;
+	            }
+
+	            var viewportPos = app.viewer.viewport.pointFromPixel(event.position);
+
+	            var diffX = viewportPos.x - drag.startPos.x;
+	            var diffY = viewportPos.y - drag.startPos.y;
+
+	            var location = new OpenSeadragon.Rect(
+	                Math.min(drag.startPos.x, drag.startPos.x + diffX),
+	                Math.min(drag.startPos.y, drag.startPos.y + diffY),
+	                Math.abs(diffX),
+	                Math.abs(diffY)
+	            );
+
+	            var overlayHeight = jQuery("#overlay")[0].clientWidth;
+
+	            //var w = app.viewer.tileSources[0].width;
+	            //var h = app.viewer.tileSources[0].height;
+	            var w = app.viewer.world.getItemAt(0).source.dimensions.x;
+	            var h = app.viewer.world.getItemAt(0).source.dimensions.y;
+	            region = [
+	                Math.floor(location.x * w),
+	                Math.floor(location.y * w),
+	                Math.floor(location.width * w),
+	                Math.floor(location.height * w)
+	            ]
+	           
+
+	            // if the box goes outside the boundaries of the image
+
+	                if (region[0] < 0) { region[0] = 0;  }
+	                if (region[1] < 0) { region[1] = 0;  }
+	                if (region[0]+region[2] > w) { region[2] = w - region[0]; }
+	                if (region[1]+region[3] > h) { region[3] = h - region[1]; }
+
+
+	            // update the box    
+	            app.viewer.updateOverlay(drag.overlayElement, location);
+	            
+	            working.overlay = location;
+	            
+		    // update current
+		    working.region = region.join(',');
+		    
+		    working.large = working.service + "/" + region.join(',') + "/1200,/" + working.rotation + "/default.jpg";
+		    working.small = working.service + "/" + region.join(',') + "/,300/" + working.rotation + "/default.jpg";
+		    working.actual = working.service + "/" + region.join(',') + "/"+overlayHeight+"/" + working.rotation + "/default.jpg";
+		    working.html = "<img alt='detail' src='" + working.small + "' data-manifest='" + working.manifest + "'/>";
+
+	            updateOutputURLs();
+	        },
+	        releaseHandler: function(event) {
+
+	            if (app.selectionMode == true) {
+
+			app.annoPage.items.forEach((item)=>{
+			  if(item.id == working.id) {
+			    console.log(working.region);
+			    item.target.id += "#xywh=" + working.region;
+			  }
+			});
+
+			buildFilmstrip();
+
+	                //manifest_url = jQuery(".gallery-item-active").attr('data-manifest');
+
+	                // add info to the selections array
+	                // creating an id would probably be good
+	                // app.selections[id] = app.outputs;
+	                //var selection_index = app.selections.push(app.outputs)-1;
+
+
+	                // if any items in the tray are currently active, remove active class
+	                jQuery(".filmstrip-item.active-item").removeClass('active-item');
+
+               		// jQuery("#preview").addClass('shown').show();
+
+	                // revert output mode back to actual
+	                jQuery("#actual").prop("checked", true);
+	                jQuery("#output").attr('data-mode', 'actual');
+
+	                jQuery("#crop").removeClass("activated");
+
+	                jQuery("#output").attr('data-mode', 'actual');
+	                setMode('large');
+	                updateOutputURLs();
+             
+	                
+	                
+	                
+	            }
+
+	            drag = null;
+
+	        }
+	    });
+
+
+
 
 } // end init()
 
@@ -134,6 +299,20 @@ function toggleRightSidebar() {
     }
 }
 
+/************************************
+ * 
+ *************************************/
+function toggleBothSidebars() {
+    if (jQuery("#main").hasClass('v2')) {
+        jQuery("#main").removeClass('v2');
+        jQuery("#main").addClass('v1');
+    } else if (jQuery("#main").hasClass('v3')) {
+        jQuery("#main").removeClass('v3');
+        jQuery("#main").addClass('v1');
+    } else {
+        jQuery("#main").addClass('v1');
+    }
+}
 
 /************************************
  * 
@@ -171,7 +350,7 @@ function parseSingleImage(url) {
     o.items.push(item);
 
     CT.manifests[url] = o;
-    addToGallery(url, o);
+    addManifest(url, o);
 
 }
 
@@ -284,32 +463,7 @@ function SelectText(element) {
 
 
 
-	jQuery(document).on("click", ".copyable", function(e) {
-	    var containerDiv = jQuery(this).parent().parent().find(".selectcrop");
-	    //Make the container Div contenteditable
-	    containerDiv.attr("contenteditable", true);
-	    //Select the image
-	    SelectText(containerDiv.get(0));
-	    //Execute copy Command
-	    //Note: This will ONLY work directly inside a click listener
-	    document.execCommand('copy');
-	    //Unselect the content
-	    window.getSelection().removeAllRanges();
-	    //Make the container Div uneditable again
-	    containerDiv.removeAttr("contenteditable");
-	    //Success!!
-	    console.log("image copied!");
-	});
-
-	jQuery(".sidebar-right").click(function(e){
-	  toggleRightSidebar();
-	  e.preventDefault();
-	});
-
-	jQuery(".sidebar-left").click(function(e){
-	  toggleLeftSidebar();
-	  e.preventDefault();
-	});   
+ 
    
    
    
@@ -319,18 +473,7 @@ function SelectText(element) {
      e.preventDefault();
    });
 
-	/****************************
-	* remove item from preview bar
-	*****************************************/
-	
-	jQuery(document).on("click", ".filmstrip-item-close", function(e) {
-	  var parent = jQuery(this).parent().parent()
-	  var id = parent.attr('id');
-	  delete app.selections[id];
-	  parent.remove();
-	  
-	  e.preventDefault();
-	});
+
 	
 	
 	
@@ -416,9 +559,7 @@ function SelectText(element) {
 	    
 	       var m = new IIIFConverter();
 	       m.load(manifest);
-	       
 
-	       
 	       switch(m.type) {
 	         case "Collection":
 	             //if(m.items.length > 50) { m.items = m.items.slice(0, 49); console.log(m.items); }
@@ -429,7 +570,7 @@ function SelectText(element) {
 	         break;
 	         case "Manifest":
 	             app.manifests[url] = m;
-	             addToGallery(url, m);
+	             addManifest(url, m);
 	             
 	         break;
 	         case "Annotation":
@@ -448,17 +589,27 @@ function SelectText(element) {
 
 
 
-	/*********************************
-	 * ACTIONS
-	 *******************************/
+	function doImport() {
+	  var json = JSON.parse(jQuery("#importexport").val());
+	  var manifests = [];
+	  json.items.forEach((item)=>{
+	    var manifest = item.target.partOf.id;
+	    if(manifests.indexOf(manifest) === -1) { manifests.push(manifest); }
+	  });
+	  app.manifests = [];
+	  manifests.forEach((manifest)=>{
+	     load(manifest);
+	  });
 
-	// submit a url
-	jQuery("#submit").click(function() {
-	    var url = jQuery("#url").val();
-	    app.current.manifest = url;
-	    //jQuery("#gallery").empty();
-	    load(url);
-	});
+          jQuery("#gallery").empty();
+          console.log('get list of manifests and populate gallery');
+          
+          console.log('set annoPage');
+          app.annoPage = json;
+          console.log(app.annoPage);
+          buildFilmstrip();
+	}
+
 	
 	
 	
@@ -515,7 +666,386 @@ function SelectText(element) {
 	}
 
 
+	function resequenceSelections() {
+	  var newselections = {};
+	  jQuery(".filmstrip-item").each(function(i,v){
+	     var id = jQuery(v).attr('id');
+	     newselections[id] = app.selections[id];
+	  });
+	  app.selections = newselections;
+	}
+	
+	
+	function cropOn() {
+	  jQuery("#crop").removeClass("disabled");
+	}
+	
+	function cropOff() {
+	  jQuery("#crop").addClass("disabled");
+	}
+	
 
+	function enableCrop() {
+	   jQuery("#crop").addClass("activated");
+	   app.selectionMode = true;
+	   app.viewer.setMouseNavEnabled(false);
+	   if (app.overlayOn) {
+	         app.viewer.removeOverlay("overlay");
+	   }
+	   app.overlayOn = true;
+	}
+	
+	function disableCrop() {
+	   jQuery("#crop").removeClass("activated");
+	   app.selectionMode = false;
+	   app.viewer.setMouseNavEnabled(true);
+	   if (app.overlayOn) {
+	      app.viewer.removeOverlay("overlay");
+	   }	   
+	   app.overlayOn = false;
+
+	}
+	
+	function updateSlide() {
+	   working.textualbody = jQuery("#textualbody").val();
+	   working.tags = jQuery("#tags").val();
+	   toggleRightSidebar();   
+	}		
+
+	
+	function buildCanvasGallery() {
+	  app.manifests = [];
+	  jQuery("#gallery").empty();
+	  
+	  app.annoPage.items.forEach((item)=>{
+	     var manifest = item.target.partOf.id;
+	     if(app.manifests.indexOf(manifest) < 0) {
+		app.manifests.push(manifest);
+		load(manifest);
+	     }     
+	  });
+	        
+	}
+	
+	
+	
+	
+	
+
+	function buildFilmstrip() {
+
+	   jQuery("#filmstrip-tray").empty();
+	   app.annoPage.items.forEach((item)=>{
+
+	       var image = "";
+	       var parts = item.target.id.split("#xywh=");
+	       var canvas = parts[0];
+	         
+	       var data = app.canvases[canvas];
+	       if(parts.length > 1) {
+	         image = data.service + "/"+parts[1]+"/200,/0/default.jpg";
+	       }
+	       else {
+	         image = data.service + "/full/200,/0/default.jpg";
+	       }
+	       
+	       
+	       var alttext = "detail from ";
+	       var manifest = item.target.partOf.id;
+	       var canvas = item.target.id;
+	       var mirador_link = "https://mcgrawcenter.github.io/mirador/?manifest=";
+	       
+
+	       var slide = `<div id='` + item.id + `' class='filmstrip-item' data-canvas='`+ canvas +`'>
+		    <div><img src='`+image+`' data-manifest='`+manifest+`'/></div>
+		    <div class='selectcrop copyable' style='position:absolute;top:0px;left:0px;z-index:-100'>
+		    <a href='` + manifest + `' title='`+alttext+`' target='_blank'>
+		    <img alt='detail of' src='`+image+`' data-manifest='"+manifest+"'/>
+		    </a>
+		    </div>
+		    <span class='filmstrip-item-tools'>
+		     <a href='#' class='copyable'><img src='assets/images/copy.svg' class='icon-sm'/></a>
+		     <a href='#' class='filmstrip-item-metadata'><img src='assets/images/info-circle-white.svg' class='icon-sm'/></a>
+		     <a href='` + image + `' class='filmstrip-item-external' target='_blank'><img src='assets/images/external-white.svg' class='icon-sm'/></a>
+		     <a href='#' class='filmstrip-item-close'><img src='assets/images/x-white.svg' class='icon-sm'/></a></span></div>`;
+   
+		jQuery("#filmstrip-tray").append(slide);
+		showFilmstrip();
+
+
+	   });
+	}
+	
+	
+	
+	
+	function addAnnotation(canvas, manifest) {
+
+	   
+	   var item = {
+		      "id": makeid(),
+		      "@context": "http://www.w3.org/ns/anno.jsonld",
+		      "type": "Annotation",
+		      "body": [],
+		      "created": "",
+		      "creator": "",
+		      "target": {
+			  "id": canvas,
+			  "type": "Canvas",
+			  "partOf": {
+			    "id": manifest,
+			    "type": "Manifest"
+			  }
+			},
+			"scope": "ART100"
+		    }	   
+	   
+	   
+	   
+	   
+	   var textualbody = jQuery("#textualbody").val();
+	   if(textualbody != "") {
+	      var body = { "type": "TextualBody", "value": textualbody }
+	      item.body.push(body);
+	   }
+	   var tags = jQuery("#tags").val();
+	   if(tags != "") {
+	     var tagarray = tags.split(',').map(s => s.trim());
+	     for(t in tagarray){
+	       var body = {"type":"Annotation","value":tagarray[t],"purpose":"tagging","format":"text/html"}
+	       item.body.push(body);
+	     }
+	   }  
+	   
+	  // now the image
+	   if(!jQuery.isEmptyObject(working) && working.region.indexOf(',') > 0) {
+	       var image = working.service+"/"+working.region+"/600,/0/default.jpg";
+	   }
+	   else { 
+	       var image = working.service+"/full/600,/0/default.jpg";
+	   }	  
+	  var body = {"type":"Image","value":image,"format":"image/jpeg"}
+	  item.body.push(body);	   	   
+
+	  app.annoPage.items.push(item);
+	  
+	  buildFilmstrip();
+	}
+	
+	
+	function loadSelection(id) {
+	
+	  jQuery(".filmstrip-item").removeClass('active-item');
+	  jQuery("#"+id).addClass('active-item');
+	  
+	  var manifest = jQuery(this).attr('data-manifest');
+	  var canvas =   jQuery(this).attr('data-canvas');
+
+          working = app.selections[id];
+          working.selections = Object.keys(app.selections).reverse();
+
+	
+          working.next = 0;
+          working.prev = 0;
+          
+         
+          var index = working.selections.indexOf(id);
+          var last = working.selections.length-1;
+         
+          if(working.selections.length > 1) {
+            if(index == 0) { working.prev = working.selections[last]; working.next = working.selections[1];}
+            else if (index == last) { working.prev = working.selections[last-1];working.next = working.selections[0]; }
+            else { working.prev = working.selections[index - 1];working.next = working.selections[index + 1]; }
+          }
+          else {
+            working.next = null;
+            working.prev = null;
+          }
+          
+
+	  jQuery(".nextprev.prev").attr('rel',working.prev);
+	  jQuery(".nextprev.next").attr('rel',working.next);
+          
+          //working = app.selections[id];
+          
+	  if(working.crop == true) { 
+	  
+	      // if this is a crop, disable cropping button
+	      jQuery("#crop").addClass('disabled');
+
+	       var tilesource = {
+	   	  type: 'image',
+		  url:  working.large
+	       }
+	       app.viewer
+	       app.viewer.open(tilesource);
+	    }
+	    else {
+	      // if this is not a crop, enable cropping button
+	      jQuery("#crop").removeClass('disabled');	    
+	      app.viewer.open(working.service+"/info.json");
+	    }              
+          /*
+          app.viewer.open(working.service+"/info.json");
+
+          if(working.crop==true) { 
+                    app.viewer.removeOverlay("overlay");
+                    app.viewer.removeOverlay("overlaytemp");
+	            var overlayElement = document.createElement("div");
+	            
+	            overlayElement.id = "overlaytemp";
+	            overlayElement.className = "highlight";
+	            app.viewer.addOverlay({
+	                element: overlayElement,
+	                location: new OpenSeadragon.Rect(working.overlay.x, working.overlay.y, working.overlay.width, working.overlay.height)
+	            });
+   
+           }
+    	   */
+	    // load annotations
+	    jQuery("#textualbody").val(working.textualbody);
+	    jQuery("#tags").val(working.tags);
+	    
+	    //highlight corresponding canvas
+	    jQuery(".gallery-item").removeClass('active-item');
+	    jQuery(".gallery-item[data-canvas='" + working.canvas + "']").addClass('active-item');
+
+	    	
+            //re-populate the url text field with the manifest url for this detail
+	    jQuery("#url").val(app.selections[id].manifest);
+
+	    //populate the output textarea with whatever mode is currently selected
+	    updateOutputURLs();
+	}
+	
+	function loadCanvas(canvas, manifest) {
+	
+	  jQuery(".gallery-item").removeClass('active-item');
+	  
+
+	    var o = app.canvases[canvas];
+	    
+	    
+	    //var alttext = app.manifests[working.manifest].label.replace("'","&apos;");
+	    var alttext = o.label;
+	    
+            working = {
+                "manifest": manifest,
+                "canvas": canvas,
+                "service": o.service,
+                "version": o.version,
+                "region": "full",
+                "size": "full",
+                "rotation": '0',
+                "height": o.height,
+                "width": o.width,   
+                "large": o.service + "/full/1200,/0/default.jpg",
+                "small": o.service + "/full/,300/0/default.jpg",
+                "actual": o.service + "/full/full/0/default.jpg",
+                "html": "<img alt='detail of "+alttext+"' src='"+ o.service + "/full/full/0/default.jpg' data-manifest='" + manifest + "'/>",
+                "textualbody":"",
+                "tags":""
+            }
+               
+	    if (o.version == 3) { working.size = "max"; }
+          
+	    app.viewer.open(working.service+"/info.json");
+
+	    // load annotations
+	    jQuery("#textualbody").val(working.textualbody);
+	    
+	    jQuery("#tags").val(working.tags);
+	    
+	    //highlight corresponding canvas
+	    jQuery(".gallery-item").removeClass('active-item');
+	    jQuery(".gallery-item[data-canvas='" + working.canvas + "']").addClass('active-item');
+	    	
+            //re-populate the url text field with the manifest url for this detail
+	    jQuery("#url").val(working.manifest);
+
+	    //populate the output textarea with whatever mode is currently selected
+	    updateOutputURLs();
+	}
+	
+
+	/************************************
+	 * 
+	 *********************************/
+
+	function addManifest(manifest, item) {
+	
+	    if(app.manifests.indexOf(manifest) > -1) {
+	       alert("This item already exists");
+	    }
+	    else {
+	      app.manifests.push(manifest)
+	
+	      var html = "<div>";
+	      html += "<p class='gallery-manifest-label'>" + item.label + "</p>";
+	      html += "<ul>";
+	    
+	    
+	    
+	      jQuery.each(item.items, function(i, v) {
+
+	          app.canvases[v.id] = v;
+	          app.canvases[v.id].manifest = manifest;
+	    
+	          if (v.service != 'error') {
+	              html += "<li class='gallery-item' data-manifest='" + manifest + "' data-canvas='" + v.id + "' alt='image " + i + "'><img alt='" + v.label + "' src='" + v.service + "/full/,200/0/default.jpg'/><div class='gallery-item-label'>" + v.label + " </div></li>";
+	          } else {
+	              html += "<li class='gallery-item' data-manifest='" + v.manifest + "' data-canvas='" + v.canvas + "' alt='image " + i + "'><div class='gallery-item-label'>" + v.label + " </div></li>";
+	          }
+	      });	    
+	      html += "</ul>";
+	      html += "</div>";
+	    
+	      jQuery("#gallery").prepend(html);
+	    }
+	    
+	}
 
 	
 	
+	
+	
+	/*************** MODAL ***************/
+	
+	// Get the modal
+var modal = document.getElementById("myModal");
+
+// Get the button that opens the modal
+//var btn = document.getElementById("myBtn");
+
+// Get the <span> element that closes the modal
+var span = document.getElementsByClassName("close")[0];
+
+// When the user clicks on the button, open the modal
+/*
+btn.onclick = function() {
+  modal.style.display = "block";
+}
+*/
+
+// When the user clicks on <span> (x), close the modal
+span.onclick = function() {
+  modal.style.display = "none";
+}
+
+// When the user clicks anywhere outside of the modal, close it
+window.onclick = function(event) {
+  if (event.target == modal) {
+    modal.style.display = "none";
+  }
+} 
+
+    function openModal(modalId) {
+       jQuery('#'+modalId).css('display', 'block');
+    }
+    
+    function closeModal(modalId) {
+       jQuery('#'+modalId).css('display', 'none');
+    }
+
+
+	/*************** END MODAL ***************/		
