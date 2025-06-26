@@ -21,6 +21,16 @@
 	var working = {};
 	
 	
+	function encode() {
+	  var data = JSON.stringify(app.annoPage);
+	  var enc1 = encodeURIComponent(data);
+	  var enc2 = btoa(enc1);
+
+	  return "carousel.html?data="+enc2;
+
+	}
+	
+	
 	/******************
 	 * select a gallery item
 	 ***********************************************************/
@@ -261,6 +271,9 @@ console.log('this is getting re');
 
 	jQuery(".carousel").click(function(e){
 	  toggleBothSidebars();
+	  var url = encode();
+	  console.log(url);
+	  window.open(url, '_blank').focus();
 	  e.preventDefault();
 	});  
 
