@@ -111,12 +111,18 @@
 	jQuery("#submit").click(function() {
 	    var url = jQuery("#url").val();
 	    app.current.manifest = url;
-	    load(url);
+	    var x = new IIIFConverter();
+	    x.load(url, function(m){
+	      //ben
+	      addManifest(url, m);
+	    });
 	});
 
 
        jQuery("#saveannotations").click(function(e){
-         updateSlide();
+	 working.textualbody = jQuery("#textualbody").val();
+	 working.tags = jQuery("#tags").val();
+	 addAnnotation(working.canvas, working.manifest);
          e.preventDefault();
        });
 
@@ -226,7 +232,7 @@ console.log('this is getting re');
 	
 	jQuery(document).on("click", ".filmstrip-item-close", function(e) {
 	  e.stopPropagation();
-	  var parent = jQuery(this).parent().parent()
+	  var parent = jQuery(this).parent().parent();
 	  var id = parent.attr('id');
 	  
 	  console.log(id);

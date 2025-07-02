@@ -405,3 +405,19 @@ input[type='text'], textarea {
   padding-top: 20%;
 }
 */
+
+
+#carousel {
+  position: absolute;
+  top: 0px;
+  bottom: 0px;
+  left: 0px;
+  right: 0px;
+  background: black;
+  z-index: 999;
+  display:none;
+}
+
+#carousel.shown {
+  display:block;
+}

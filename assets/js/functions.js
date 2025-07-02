@@ -1,4 +1,4 @@
-
+var p ={};
 
 function init() {
 
@@ -12,7 +12,10 @@ function init() {
         var url = vars.manifest;
         jQuery("#url").val(url);
         jQuery("#gallery").empty();
-        load(url);
+      var x = new IIIFConverter();
+      x.load(url, function(m){
+        addManifest(url, m);
+      });
     }
 
 
@@ -46,178 +49,178 @@ tippy('.copyable', {
     });
 
 
-	/***********************
-	* drag to sort
-	********************************/
-	$( "#filmstrip-tray" ).sortable({
-	      update: function( ) {
-		 resequenceSelections();
-	      }
-	});
+      /***********************
+      * drag to sort
+      ********************************/
+      $( "#filmstrip-tray" ).sortable({
+            update: function( ) {
+             resequenceSelections();
+            }
+      });
 
-	    /**************************
-	     * initialize OSD
-	     ********************/
-	    app.viewer = OpenSeadragon({
-	        id: "viewer",
-	        prefixUrl: "assets/js/openseadragon/images/",
-	        tileSources: [],
-	        showFullPageControl: false,
-	        showRotationControl: true,
-	        minZoomLevel: 0.1,
-	        defaultZoomLevel: 0.5,
-	        preserveImageSizeOnResize: true
-	    });
+          /**************************
+           * initialize OSD
+           ********************/
+          app.viewer = OpenSeadragon({
+              id: "viewer",
+              prefixUrl: "assets/js/openseadragon/images/",
+              tileSources: [],
+              showFullPageControl: false,
+              showRotationControl: true,
+              minZoomLevel: 0.1,
+              defaultZoomLevel: 0.5,
+              preserveImageSizeOnResize: true
+          });
 
-	    app.viewer.addHandler('rotate', function() {
-	        working.rotation = viewer.viewport.getRotation();
+          app.viewer.addHandler('rotate', function() {
+              working.rotation = viewer.viewport.getRotation();
 
-	        if (working.rotation < 0) {
-	            working.rotation = 360 + working.rotation;
-	        }
-	        if (working.rotation == 360) {
-	            working.rotation = 0;
-	        }
-	    });
-	    
-	    
+              if (working.rotation < 0) {
+                  working.rotation = 360 + working.rotation;
+              }
+              if (working.rotation == 360) {
+                  working.rotation = 0;
+              }
+          });
+          
+          
 
-	    /*************************** CROPPING **************************/
-
-
-	    // draw overlays
-
-	    new OpenSeadragon.MouseTracker({
+          /*************************** CROPPING **************************/
 
 
-	        element: app.viewer.element,
-	        pressHandler: function(event) {
+          // draw overlays
+
+          new OpenSeadragon.MouseTracker({
 
 
-	            if (!app.selectionMode) {
-	                return;
-	            }
-
-	            if (app.overlayOn) {
-	                app.viewer.removeOverlay("overlay");
-	            }
-	            var overlayElement = document.createElement("div");
-	            overlayElement.id = "overlay";
-	            overlayElement.className = "highlight";
-
-	            var viewportPos = app.viewer.viewport.pointFromPixel(event.position);
-	            app.viewer.addOverlay({
-	                element: overlayElement,
-	                location: new OpenSeadragon.Rect(viewportPos.x, viewportPos.y, 0, 0)
-	            });
-	            app.overlayOn = true;
-	            drag = {
-	                overlayElement: overlayElement,
-	                startPos: viewportPos
-	            };
+              element: app.viewer.element,
+              pressHandler: function(event) {
 
 
-	        },
-	        dragHandler: function(event) {
+                  if (!app.selectionMode) {
+                      return;
+                  }
 
-	            if (typeof drag === 'undefined') {
-	                return;
-	            }
+                  if (app.overlayOn) {
+                      app.viewer.removeOverlay("overlay");
+                  }
+                  var overlayElement = document.createElement("div");
+                  overlayElement.id = "overlay";
+                  overlayElement.className = "highlight";
 
-	            var viewportPos = app.viewer.viewport.pointFromPixel(event.position);
-
-	            var diffX = viewportPos.x - drag.startPos.x;
-	            var diffY = viewportPos.y - drag.startPos.y;
-
-	            var location = new OpenSeadragon.Rect(
-	                Math.min(drag.startPos.x, drag.startPos.x + diffX),
-	                Math.min(drag.startPos.y, drag.startPos.y + diffY),
-	                Math.abs(diffX),
-	                Math.abs(diffY)
-	            );
-
-	            var overlayHeight = jQuery("#overlay")[0].clientWidth;
-
-	            //var w = app.viewer.tileSources[0].width;
-	            //var h = app.viewer.tileSources[0].height;
-	            var w = app.viewer.world.getItemAt(0).source.dimensions.x;
-	            var h = app.viewer.world.getItemAt(0).source.dimensions.y;
-	            region = [
-	                Math.floor(location.x * w),
-	                Math.floor(location.y * w),
-	                Math.floor(location.width * w),
-	                Math.floor(location.height * w)
-	            ]
-	           
-
-	            // if the box goes outside the boundaries of the image
-
-	                if (region[0] < 0) { region[0] = 0;  }
-	                if (region[1] < 0) { region[1] = 0;  }
-	                if (region[0]+region[2] > w) { region[2] = w - region[0]; }
-	                if (region[1]+region[3] > h) { region[3] = h - region[1]; }
+                  var viewportPos = app.viewer.viewport.pointFromPixel(event.position);
+                  app.viewer.addOverlay({
+                      element: overlayElement,
+                      location: new OpenSeadragon.Rect(viewportPos.x, viewportPos.y, 0, 0)
+                  });
+                  app.overlayOn = true;
+                  drag = {
+                      overlayElement: overlayElement,
+                      startPos: viewportPos
+                  };
 
 
-	            // update the box    
-	            app.viewer.updateOverlay(drag.overlayElement, location);
-	            
-	            working.overlay = location;
-	            
-		    // update current
-		    working.region = region.join(',');
-		    
-		    working.large = working.service + "/" + region.join(',') + "/1200,/" + working.rotation + "/default.jpg";
-		    working.small = working.service + "/" + region.join(',') + "/,300/" + working.rotation + "/default.jpg";
-		    working.actual = working.service + "/" + region.join(',') + "/"+overlayHeight+"/" + working.rotation + "/default.jpg";
-		    working.html = "<img alt='detail' src='" + working.small + "' data-manifest='" + working.manifest + "'/>";
+              },
+              dragHandler: function(event) {
 
-	            updateOutputURLs();
-	        },
-	        releaseHandler: function(event) {
+                  if (typeof drag === 'undefined') {
+                      return;
+                  }
 
-	            if (app.selectionMode == true) {
+                  var viewportPos = app.viewer.viewport.pointFromPixel(event.position);
 
-			app.annoPage.items.forEach((item)=>{
-			  if(item.id == working.id) {
-			    console.log(working.region);
-			    item.target.id += "#xywh=" + working.region;
-			  }
-			});
+                  var diffX = viewportPos.x - drag.startPos.x;
+                  var diffY = viewportPos.y - drag.startPos.y;
 
-			buildFilmstrip();
+                  var location = new OpenSeadragon.Rect(
+                      Math.min(drag.startPos.x, drag.startPos.x + diffX),
+                      Math.min(drag.startPos.y, drag.startPos.y + diffY),
+                      Math.abs(diffX),
+                      Math.abs(diffY)
+                  );
 
-	                //manifest_url = jQuery(".gallery-item-active").attr('data-manifest');
+                  var overlayHeight = jQuery("#overlay")[0].clientWidth;
 
-	                // add info to the selections array
-	                // creating an id would probably be good
-	                // app.selections[id] = app.outputs;
-	                //var selection_index = app.selections.push(app.outputs)-1;
+                  //var w = app.viewer.tileSources[0].width;
+                  //var h = app.viewer.tileSources[0].height;
+                  var w = app.viewer.world.getItemAt(0).source.dimensions.x;
+                  var h = app.viewer.world.getItemAt(0).source.dimensions.y;
+                  region = [
+                      Math.floor(location.x * w),
+                      Math.floor(location.y * w),
+                      Math.floor(location.width * w),
+                      Math.floor(location.height * w)
+                  ]
+                 
+
+                  // if the box goes outside the boundaries of the image
+
+                      if (region[0] < 0) { region[0] = 0;  }
+                      if (region[1] < 0) { region[1] = 0;  }
+                      if (region[0]+region[2] > w) { region[2] = w - region[0]; }
+                      if (region[1]+region[3] > h) { region[3] = h - region[1]; }
 
 
-	                // if any items in the tray are currently active, remove active class
-	                jQuery(".filmstrip-item.active-item").removeClass('active-item');
+                  // update the box    
+                  app.viewer.updateOverlay(drag.overlayElement, location);
+                  
+                  working.overlay = location;
+                  
+                // update current
+                working.region = region.join(',');
+                
+                working.large = working.service + "/" + region.join(',') + "/1200,/" + working.rotation + "/default.jpg";
+                working.small = working.service + "/" + region.join(',') + "/,300/" + working.rotation + "/default.jpg";
+                working.actual = working.service + "/" + region.join(',') + "/"+overlayHeight+"/" + working.rotation + "/default.jpg";
+                working.html = "<img alt='detail' src='" + working.small + "' data-manifest='" + working.manifest + "'/>";
 
-               		// jQuery("#preview").addClass('shown').show();
+                  updateOutputURLs();
+              },
+              releaseHandler: function(event) {
 
-	                // revert output mode back to actual
-	                jQuery("#actual").prop("checked", true);
-	                jQuery("#output").attr('data-mode', 'actual');
+                  if (app.selectionMode == true) {
 
-	                jQuery("#crop").removeClass("activated");
+                  app.annoPage.items.forEach((item)=>{
+                    if(item.id == working.id) {
+                      //console.log(working.region);
+                      item.target.id += "#xywh=" + working.region;
+                    }
+                  });
 
-	                jQuery("#output").attr('data-mode', 'actual');
-	                setMode('large');
-	                updateOutputURLs();
+                  buildFilmstrip();
+
+                      //manifest_url = jQuery(".gallery-item-active").attr('data-manifest');
+
+                      // add info to the selections array
+                      // creating an id would probably be good
+                      // app.selections[id] = app.outputs;
+                      //var selection_index = app.selections.push(app.outputs)-1;
+
+
+                      // if any items in the tray are currently active, remove active class
+                      jQuery(".filmstrip-item.active-item").removeClass('active-item');
+
+                           // jQuery("#preview").addClass('shown').show();
+
+                      // revert output mode back to actual
+                      jQuery("#actual").prop("checked", true);
+                      jQuery("#output").attr('data-mode', 'actual');
+
+                      jQuery("#crop").removeClass("activated");
+
+                      jQuery("#output").attr('data-mode', 'actual');
+                      setMode('large');
+                      updateOutputURLs();
              
-	                
-	                
-	                
-	            }
+                      
+                      
+                      
+                  }
 
-	            drag = null;
+                  drag = null;
 
-	        }
-	    });
+              }
+          });
 
 
 
@@ -415,51 +418,51 @@ function SelectText(element) {
     }
 }
 
-	/************************************
-	 * 
-	 *********************************/
+      /************************************
+       * 
+       *********************************/
 
-	function parseMetadata(metadata) {
+      function parseMetadata(metadata) {
 
-	    var a = [];
+          var a = [];
 
-	    // then get the metadata
-	    jQuery.each(metadata, function(i, v) {
-	        var label = getFirstValue(v.label);
-	        var value = getFirstValue(v.value);
-	        var r = {
-	            "label": label,
-	            "value": value
-	        }
-	        a.push(r);
-	    });
-	    return a;
+          // then get the metadata
+          jQuery.each(metadata, function(i, v) {
+              var label = getFirstValue(v.label);
+              var value = getFirstValue(v.value);
+              var r = {
+                  "label": label,
+                  "value": value
+              }
+              a.push(r);
+          });
+          return a;
 
-	}
+      }
 
 
-	/************************************
-	 * 
-	 *********************************/
+      /************************************
+       * 
+       *********************************/
 
-	function getFirstValue(o) {
-	    if (typeof o === "object") {
-	        var x = Object.values(o)[0];
-	        if (typeof x == 'object') {
-	            return Object.values(x)[0];
-	        } else {
-	            return x;
-	        }
-	    } else if (typeof o === "array") {
-	        return o.label[0];
-	    } else if (typeof o === "string") {
-	        return o;
-	    } else {
-	        return "";
-	    }
-	}
-	
-	
+      function getFirstValue(o) {
+          if (typeof o === "object") {
+              var x = Object.values(o)[0];
+              if (typeof x == 'object') {
+                  return Object.values(x)[0];
+              } else {
+                  return x;
+              }
+          } else if (typeof o === "array") {
+              return o.label[0];
+          } else if (typeof o === "string") {
+              return o;
+          } else {
+              return "";
+          }
+      }
+      
+      
 
 
 
@@ -474,377 +477,385 @@ function SelectText(element) {
    });
 
 
-	
-	
-	
-	
-	/****************************
-	* click on info icon in preview item
-	*****************************************/
-	
-	jQuery(document).on("click", ".filmstrip-item-metadata", function(e) {
-	
-	  var manifest = jQuery(this).parent().parent().attr('data-manifest');
-	  var canvas = jQuery(this).parent().parent().attr('data-canvas');
-	  
-	   // update the urls that go in the 'copy' textarea
-	   updateOutputURLs();
+      
+      
+      
+      
+      /****************************
+      * click on info icon in preview item
+      *****************************************/
+      
+      jQuery(document).on("click", ".filmstrip-item-metadata", function(e) {
+      
+        var manifest = jQuery(this).parent().parent().attr('data-manifest');
+        var canvas = jQuery(this).parent().parent().attr('data-canvas');
+        
+         // update the urls that go in the 'copy' textarea
+         updateOutputURLs();
 
-	   var o = app.manifests[manifest];
+         var o = app.manifests[manifest];
 
-	   var html = "";
-	   html += "<p><label for='title'>Title:</label> <span id='title'>"+o.label+"</span></p>";
-	   html += "<p><label for='descr'>Description:</label> <span id='descr'>"+o.description+"</span></p>";
-	   
-	   jQuery.each(o.metadata, function(i,v) {
-	     html += "<p><label for='"+v.label+"'>"+v.label+":</label> <span id='"+v.label+"'>"+v.value+"</span></p>";
-	   });
-	   html += "<p><a href='"+manifest+"' target='_blank'><img src='assets/images/iiif.svg' class='icon'/></a></p>";
-	   
-	   html += "<p><strong>Manifest</strong>: "+manifest+"</p>";
-	   html += "<p><strong>Canvas</strong>: "+canvas+"</p>";
-	   html += "<p><strong>Region</strong>: "+region.join(',')+"</p>";
-	   
-	   
-	   
-	   jQuery('#modal_content').html(html);
-	   jQuery('#modal').modal();
+         var html = "";
+         html += "<p><label for='title'>Title:</label> <span id='title'>"+o.label+"</span></p>";
+         html += "<p><label for='descr'>Description:</label> <span id='descr'>"+o.description+"</span></p>";
+         
+         jQuery.each(o.metadata, function(i,v) {
+           html += "<p><label for='"+v.label+"'>"+v.label+":</label> <span id='"+v.label+"'>"+v.value+"</span></p>";
+         });
+         html += "<p><a href='"+manifest+"' target='_blank'><img src='assets/images/iiif.svg' class='icon'/></a></p>";
+         
+         html += "<p><strong>Manifest</strong>: "+manifest+"</p>";
+         html += "<p><strong>Canvas</strong>: "+canvas+"</p>";
+         html += "<p><strong>Region</strong>: "+region.join(',')+"</p>";
+         
+         
+         
+         jQuery('#modal_content').html(html);
+         jQuery('#modal').modal();
 
-	  e.preventDefault();
-	});		
-  	
-  	
-  		/************************************
-	* Load a manifest
-	* to do: if a manifest uses static images, we cannot use this tool
-	* we need to alert the user
-	* an example manifest with static jpgs at https://discover.york.ac.uk/ark:/36941/13192/presentation/3/manifest 
-	*************************************/
-	function load(url) {
-
-
-	    // UCLA has an 'ark:' in their urls that need to be encoded
-	    url = url.replace(/ark:\/(.*?)\/full/, function(r, a) {
-	        var parts = a.split('/');
-	        return "ark%3A%2F" + parts.join('%2F')+"/full";
-	    });
-	    url = url.replace(/ark:\/(.*?)\/manifest/, function(r, a) {
-	        var parts = a.split('/');
-	        return "ark%3A%2F" + parts.join('%2F')+"/manifest";
-	    });
-
-	    // if this is an Internet Archive URL
-	    // convert it to a manifest
-	    if (url.indexOf("archive.org") > 0 && url.indexOf("details") > 0) {
-	        url = internetArchive2Manifest(url);
-	    }
+        e.preventDefault();
+      });            
+        
+        
+              /************************************
+      * Load a manifest
+      * to do: if a manifest uses static images, we cannot use this tool
+      * we need to alert the user
+      * an example manifest with static jpgs at https://discover.york.ac.uk/ark:/36941/13192/presentation/3/manifest 
+      *************************************/
+      function load(url) {
 
 
-	    // if this is a IIIF image url, parse it
-	    if (url.search(/\/([0-9]{1,3})\/(color|gray|bitonal|default)\.(png|jpg)/) > 0) {
-	        parseSingleImage(url);
-	    } else {
+          // UCLA has an 'ark:' in their urls that need to be encoded
+          url = url.replace(/ark:\/(.*?)\/full/, function(r, a) {
+              var parts = a.split('/');
+              return "ark%3A%2F" + parts.join('%2F')+"/full";
+          });
+          url = url.replace(/ark:\/(.*?)\/manifest/, function(r, a) {
+              var parts = a.split('/');
+              return "ark%3A%2F" + parts.join('%2F')+"/manifest";
+          });
+
+          // if this is an Internet Archive URL
+          // convert it to a manifest
+          if (url.indexOf("archive.org") > 0 && url.indexOf("details") > 0) {
+              url = internetArchive2Manifest(url);
+          }
 
 
+          // if this is a IIIF image url, parse it
+          if (url.search(/\/([0-9]{1,3})\/(color|gray|bitonal|default)\.(png|jpg)/) > 0) {
+              parseSingleImage(url);
+          } else {
 
-	    fetch(url).then(response => {
-			  if (!response.ok) {
-			      throw new Error(response.statusText);
-			  }
-			  return response.json();
-	    })
-	    .then(manifest => {
-	    
-	    
-	    
-	       var m = new IIIFConverter();
-	       m.load(manifest);
-
-	       switch(m.type) {
-	         case "Collection":
-	             //if(m.items.length > 50) { m.items = m.items.slice(0, 49); console.log(m.items); }
-	         
-	             m.items.forEach(function(item) {
-	                 load(item.id);
-	             });
-	         break;
-	         case "Manifest":
-	             app.manifests[url] = m;
-	             addManifest(url, m);
-	             
-	         break;
-	         case "Annotation":
-	             m.items.forEach(function(item) {
-	                 load(item.id);
-	             });
-	         break;	         	         
-	       }
-
-	    });
-
-	    } // end if/else
-
-	}
-
-
-
-
-	function doImport() {
-	  var json = JSON.parse(jQuery("#importexport").val());
-	  var manifests = [];
-	  json.items.forEach((item)=>{
-	    var manifest = item.target.partOf.id;
-	    if(manifests.indexOf(manifest) === -1) { manifests.push(manifest); }
-	  });
-	  app.manifests = [];
-	  manifests.forEach((manifest)=>{
-	     load(manifest);
-	  });
-
-          jQuery("#gallery").empty();
-          console.log('get list of manifests and populate gallery');
+            
+          /*
+          fetch(url).then(response => {
+                    if (!response.ok) {
+                        throw new Error(response.statusText);
+                    }
+                    return response.json();
+          })
+          .then(manifest => {
           
-          console.log('set annoPage');
-          app.annoPage = json;
-          console.log(app.annoPage);
-          buildFilmstrip();
-	}
+          
+          
+             var m = new IIIFConverter();
+             m.load(manifest);
 
-	
-	
-	
-	/******************************
-	 *  Set the mode
-	 ********************************/
-	function setMode(mode) {
-	    jQuery("input[id='" + mode + "']").prop("checked", true);
-	    jQuery("#output").attr("data-mode", mode);
-	    updateOutputURLs();
-	    jQuery(".filmstrip-item.active-item").find(".filmstrip-item-external").attr('href', app.current[mode]);
-	}	
+             switch(m.type) {
+               case "Collection":
+                   //if(m.items.length > 50) { m.items = m.items.slice(0, 49); console.log(m.items); }
+               
+                   m.items.forEach(function(item) {
+                       load(item.id);
+                   });
+               break;
+               case "Manifest":
+                   app.manifests[url] = m;
+                   addManifest(url, m);
+                   
+               break;
+               case "Annotation":
+                   m.items.forEach(function(item) {
+                       load(item.id);
+                   });
+               break;                              
+             }
 
-	function showHidePrevNext(){
-	  if(Object.keys(app.selections).length > 1) {
-	    jQuery('#viewer-prev').css('display','flex');
-	    jQuery('#viewer-next').css('display','flex');
-	  }
-	  else {
-	    jQuery('#viewer-prev').hide();
-	    jQuery('#viewer-next').hide();
-	  }
-	}
+          }); // end fetch
+          */
 
+          } // end if/else
 
-	/*************************
-	 * show / hide preview bar
-	 ***********************************/
-
-	jQuery(".showfilmstrip").click(function() {
-	    if (jQuery("#filmstrip").hasClass('shown')) {
-	        hideFilmstrip();
-	    } else {
-	        showFilmstrip();
-	    }
-	});
-	
-	
-	function showFilmstrip() {
-	   jQuery("#filmstrip").addClass('shown');
-	}
-	
-	function hideFilmstrip() {
-	   jQuery("#filmstrip").removeClass('shown');
-	}	
-
-	/************************************
-	 * 
-	 *************************************/
-	function updateOutputURLs() {
-	    var mode = jQuery("#output").attr("data-mode");
-	    jQuery("#output").val(working[mode]);
-	    jQuery("#copy").show();
-	}
+      }
 
 
-	function resequenceSelections() {
-	  var newselections = {};
-	  jQuery(".filmstrip-item").each(function(i,v){
-	     var id = jQuery(v).attr('id');
-	     newselections[id] = app.selections[id];
-	  });
-	  app.selections = newselections;
-	}
-	
-	
-	function cropOn() {
-	  jQuery("#crop").removeClass("disabled");
-	}
-	
-	function cropOff() {
-	  jQuery("#crop").addClass("disabled");
-	}
-	
 
-	function enableCrop() {
-	   jQuery("#crop").addClass("activated");
-	   app.selectionMode = true;
-	   app.viewer.setMouseNavEnabled(false);
-	   if (app.overlayOn) {
-	         app.viewer.removeOverlay("overlay");
-	   }
-	   app.overlayOn = true;
-	}
-	
-	function disableCrop() {
-	   jQuery("#crop").removeClass("activated");
-	   app.selectionMode = false;
-	   app.viewer.setMouseNavEnabled(true);
-	   if (app.overlayOn) {
-	      app.viewer.removeOverlay("overlay");
-	   }	   
-	   app.overlayOn = false;
 
-	}
-	
-	function updateSlide() {
-	   working.textualbody = jQuery("#textualbody").val();
-	   working.tags = jQuery("#tags").val();
-	   toggleRightSidebar();   
-	}		
+      function doImport() {
+        var json = JSON.parse(jQuery("#importexport").val());
+        app.annoPage = json;
+        var manifests = [];
+        json.items.forEach((item)=>{
+          var manifest = item.target.partOf.id;
+          if(manifests.indexOf(manifest) === -1) { manifests.push(manifest); }
+        });
 
-	
-	function buildCanvasGallery() {
-	  app.manifests = [];
-	  jQuery("#gallery").empty();
-	  
-	  app.annoPage.items.forEach((item)=>{
-	     var manifest = item.target.partOf.id;
-	     if(app.manifests.indexOf(manifest) < 0) {
-		app.manifests.push(manifest);
-		load(manifest);
-	     }     
-	  });
-	        
-	}
-	
-	
-	
-	
-	
+        app.manifests = [];
+        jQuery("#gallery").empty();
+        
+        console.log(app.annoPage);
+        
+        manifests.forEach((m)=>{           
+          var x = new IIIFConverter();
+            x.load(m, function(data){
+              addManifest(m, data);
+              buildFilmstrip();
+            });
+        });
 
-	function buildFilmstrip() {
 
-	   jQuery("#filmstrip-tray").empty();
-	   app.annoPage.items.forEach((item)=>{
+      }
 
-	       var image = "";
-	       var parts = item.target.id.split("#xywh=");
-	       var canvas = parts[0];
-	         
-	       var data = app.canvases[canvas];
-	       if(parts.length > 1) {
-	         image = data.service + "/"+parts[1]+"/200,/0/default.jpg";
-	       }
-	       else {
-	         image = data.service + "/full/200,/0/default.jpg";
-	       }
-	       
-	       
-	       var alttext = "detail from ";
-	       var manifest = item.target.partOf.id;
-	       var canvas = item.target.id;
-	       var mirador_link = "https://mcgrawcenter.github.io/mirador/?manifest=";
-	       
+      
+      
+      
+      /******************************
+       *  Set the mode
+       ********************************/
+      function setMode(mode) {
+          jQuery("input[id='" + mode + "']").prop("checked", true);
+          jQuery("#output").attr("data-mode", mode);
+          updateOutputURLs();
+          jQuery(".filmstrip-item.active-item").find(".filmstrip-item-external").attr('href', app.current[mode]);
+      }      
 
-	       var slide = `<div id='` + item.id + `' class='filmstrip-item' data-canvas='`+ canvas +`'>
-		    <div><img src='`+image+`' data-manifest='`+manifest+`'/></div>
-		    <div class='selectcrop copyable' style='position:absolute;top:0px;left:0px;z-index:-100'>
-		    <a href='` + manifest + `' title='`+alttext+`' target='_blank'>
-		    <img alt='detail of' src='`+image+`' data-manifest='"+manifest+"'/>
-		    </a>
-		    </div>
-		    <span class='filmstrip-item-tools'>
-		     <a href='#' class='copyable'><img src='assets/images/copy.svg' class='icon-sm'/></a>
-		     <a href='#' class='filmstrip-item-metadata'><img src='assets/images/info-circle-white.svg' class='icon-sm'/></a>
-		     <a href='` + image + `' class='filmstrip-item-external' target='_blank'><img src='assets/images/external-white.svg' class='icon-sm'/></a>
-		     <a href='#' class='filmstrip-item-close'><img src='assets/images/x-white.svg' class='icon-sm'/></a></span></div>`;
+      function showHidePrevNext(){
+        if(Object.keys(app.selections).length > 1) {
+          jQuery('#viewer-prev').css('display','flex');
+          jQuery('#viewer-next').css('display','flex');
+        }
+        else {
+          jQuery('#viewer-prev').hide();
+          jQuery('#viewer-next').hide();
+        }
+      }
+
+
+      /*************************
+       * show / hide preview bar
+       ***********************************/
+
+      jQuery(".showfilmstrip").click(function() {
+          if (jQuery("#filmstrip").hasClass('shown')) {
+              hideFilmstrip();
+          } else {
+              showFilmstrip();
+          }
+      });
+      
+      
+      function showFilmstrip() {
+         jQuery("#filmstrip").addClass('shown');
+      }
+      
+      function hideFilmstrip() {
+         jQuery("#filmstrip").removeClass('shown');
+      }      
+
+      /************************************
+       * 
+       *************************************/
+      function updateOutputURLs() {
+          var mode = jQuery("#output").attr("data-mode");
+          jQuery("#output").val(working[mode]);
+          jQuery("#copy").show();
+      }
+
+
+      function resequenceSelections() {
+        var newselections = {};
+        jQuery(".filmstrip-item").each(function(i,v){
+           var id = jQuery(v).attr('id');
+           newselections[id] = app.selections[id];
+        });
+        app.selections = newselections;
+      }
+      
+      
+      function cropOn() {
+        jQuery("#crop").removeClass("disabled");
+      }
+      
+      function cropOff() {
+        jQuery("#crop").addClass("disabled");
+      }
+      
+
+      function enableCrop() {
+         jQuery("#crop").addClass("activated");
+         app.selectionMode = true;
+         app.viewer.setMouseNavEnabled(false);
+         if (app.overlayOn) {
+               app.viewer.removeOverlay("overlay");
+         }
+         app.overlayOn = true;
+      }
+      
+      function disableCrop() {
+         jQuery("#crop").removeClass("activated");
+         app.selectionMode = false;
+         app.viewer.setMouseNavEnabled(true);
+         if (app.overlayOn) {
+            app.viewer.removeOverlay("overlay");
+         }         
+         app.overlayOn = false;
+
+      }
+      
+      function updateSlide() {
+         working.textualbody = jQuery("#textualbody").val();
+         working.tags = jQuery("#tags").val();
+         toggleRightSidebar();   
+      }            
+
+      
+      function buildCanvasGallery() {
+        app.manifests = [];
+        jQuery("#gallery").empty();
+        
+        app.annoPage.items.forEach((item)=>{
+           var manifest = item.target.partOf.id;
+           if(app.manifests.indexOf(manifest) < 0) {
+            app.manifests.push(manifest);
+            load(manifest);
+           }     
+        });
+              
+      }
+      
+      
+      
+      
+      
+
+      function buildFilmstrip() {
+
+         jQuery("#filmstrip-tray").empty();
+         
+         app.annoPage.items.forEach((item)=>{
+
+             var image = "";
+             var parts = item.target.id.split("#xywh=");
+             var canvas = parts[0];
+             
+             console.log(item);
+              
+             var data = app.canvases[canvas];
+             if(parts.length > 1) {
+               image = data.service + "/"+parts[1]+"/200,/0/default.jpg";
+             }
+             else {
+               image = data.service + "/full/200,/0/default.jpg";
+             }
+             
+             
+             var alttext = "detail from ";
+             var manifest = item.target.partOf.id;
+             var canvas = item.target.id;
+             var mirador_link = "https://mcgrawcenter.github.io/mirador/?manifest=";
+             
+
+             var slide = `<div id='` + item.id + `' class='filmstrip-item' data-canvas='`+ canvas +`'>
+                <div><img src='`+image+`' data-manifest='`+manifest+`'/></div>
+                <div class='selectcrop copyable' style='position:absolute;top:0px;left:0px;z-index:-100'>
+                <a href='` + manifest + `' title='`+alttext+`' target='_blank'>
+                <img alt='detail of' src='`+image+`' data-manifest='"+manifest+"'/>
+                </a>
+                </div>
+                <span class='filmstrip-item-tools'>
+                 <a href='#' class='copyable'><img src='assets/images/copy.svg' class='icon-sm'/></a>
+                 <a href='#' class='filmstrip-item-metadata'><img src='assets/images/info-circle-white.svg' class='icon-sm'/></a>
+                 <a href='` + image + `' class='filmstrip-item-external' target='_blank'><img src='assets/images/external-white.svg' class='icon-sm'/></a>
+                 <a href='#' class='filmstrip-item-close'><img src='assets/images/x-white.svg' class='icon-sm'/></a></span></div>`;
    
-		jQuery("#filmstrip-tray").append(slide);
-		showFilmstrip();
+            jQuery("#filmstrip-tray").append(slide);
+            showFilmstrip();
 
 
-	   });
-	}
-	
-	
-	
-	
-	function addAnnotation(canvas, manifest) {
+         });
+      }
+      
+      
+      
+      
+      function addAnnotation(canvas, manifest) {
 
-	   
-	   var item = {
-		      "id": makeid(),
-		      "@context": "http://www.w3.org/ns/anno.jsonld",
-		      "type": "Annotation",
-		      "body": [],
-		      "created": "",
-		      "creator": "",
-		      "target": {
-			  "id": canvas,
-			  "type": "Canvas",
-			  "partOf": {
-			    "id": manifest,
-			    "type": "Manifest"
-			  }
-			},
-			"scope": "ART100"
-		    }	   
-	   
-	   
-	   
-	   
-	   var textualbody = jQuery("#textualbody").val();
-	   if(textualbody != "") {
-	      var body = { "type": "TextualBody", "value": textualbody }
-	      item.body.push(body);
-	   }
-	   var tags = jQuery("#tags").val();
-	   if(tags != "") {
-	     var tagarray = tags.split(',').map(s => s.trim());
-	     for(t in tagarray){
-	       var body = {"type":"Annotation","value":tagarray[t],"purpose":"tagging","format":"text/html"}
-	       item.body.push(body);
-	     }
-	   }  
-	   
-	  // now the image
-	   if(!jQuery.isEmptyObject(working) && working.region.indexOf(',') > 0) {
-	       var image = working.service+"/"+working.region+"/600,/0/default.jpg";
-	   }
-	   else { 
-	       var image = working.service+"/full/600,/0/default.jpg";
-	   }	  
-	  var body = {"type":"Image","value":image,"format":"image/jpeg"}
-	  item.body.push(body);	   	   
+         
+         var item = {
+                  "id": makeid(),
+                  "@context": "http://www.w3.org/ns/anno.jsonld",
+                  "type": "Annotation",
+                  "body": [],
+                  "created": "",
+                  "creator": "",
+                  "target": {
+                    "id": canvas,
+                    "type": "Canvas",
+                    "partOf": {
+                      "id": manifest,
+                      "type": "Manifest"
+                    }
+                  },
+                  "scope": "ART100"
+                }         
+         
+         
+         
+         
+         var textualbody = jQuery("#textualbody").val();
+         if(textualbody != "") {
+            var body = { "type": "TextualBody", "value": textualbody }
+            item.body.push(body);
+         }
+         var tags = jQuery("#tags").val();
+         if(tags != "") {
+           var tagarray = tags.split(',').map(s => s.trim());
+           for(t in tagarray){
+             var body = {"type":"Annotation","value":tagarray[t],"purpose":"tagging","format":"text/html"}
+             item.body.push(body);
+           }
+         }  
+         
+        // now the image
+         if(!jQuery.isEmptyObject(working) && working.region.indexOf(',') > 0) {
+             var image = working.service+"/"+working.region+"/600,/0/default.jpg";
+         }
+         else { 
+             var image = working.service+"/full/600,/0/default.jpg";
+         }        
+        var body = {"type":"Image","value":image,"format":"image/jpeg"}
+        item.body.push(body);                  
 
-	  app.annoPage.items.push(item);
-	  
-	  buildFilmstrip();
-	}
-	
-	
-	function loadSelection(id) {
-	
-	  jQuery(".filmstrip-item").removeClass('active-item');
-	  jQuery("#"+id).addClass('active-item');
-	  
-	  var manifest = jQuery(this).attr('data-manifest');
-	  var canvas =   jQuery(this).attr('data-canvas');
+        app.annoPage.items.push(item);
+        
+        buildFilmstrip();
+      }
+      
+      
+      function loadSelection(id) {
+      
+        jQuery(".filmstrip-item").removeClass('active-item');
+        jQuery("#"+id).addClass('active-item');
+        
+        var manifest = jQuery(this).attr('data-manifest');
+        var canvas =   jQuery(this).attr('data-canvas');
 
           working = app.selections[id];
           working.selections = Object.keys(app.selections).reverse();
 
-	
+      
           working.next = 0;
           working.prev = 0;
           
@@ -863,72 +874,72 @@ function SelectText(element) {
           }
           
 
-	  jQuery(".nextprev.prev").attr('rel',working.prev);
-	  jQuery(".nextprev.next").attr('rel',working.next);
+        jQuery(".nextprev.prev").attr('rel',working.prev);
+        jQuery(".nextprev.next").attr('rel',working.next);
           
           //working = app.selections[id];
           
-	  if(working.crop == true) { 
-	  
-	      // if this is a crop, disable cropping button
-	      jQuery("#crop").addClass('disabled');
+        if(working.crop == true) { 
+        
+            // if this is a crop, disable cropping button
+            jQuery("#crop").addClass('disabled');
 
-	       var tilesource = {
-	   	  type: 'image',
-		  url:  working.large
-	       }
-	       app.viewer
-	       app.viewer.open(tilesource);
-	    }
-	    else {
-	      // if this is not a crop, enable cropping button
-	      jQuery("#crop").removeClass('disabled');	    
-	      app.viewer.open(working.service+"/info.json");
-	    }              
+             var tilesource = {
+                 type: 'image',
+              url:  working.large
+             }
+             app.viewer
+             app.viewer.open(tilesource);
+          }
+          else {
+            // if this is not a crop, enable cropping button
+            jQuery("#crop").removeClass('disabled');          
+            app.viewer.open(working.service+"/info.json");
+          }              
           /*
           app.viewer.open(working.service+"/info.json");
 
           if(working.crop==true) { 
                     app.viewer.removeOverlay("overlay");
                     app.viewer.removeOverlay("overlaytemp");
-	            var overlayElement = document.createElement("div");
-	            
-	            overlayElement.id = "overlaytemp";
-	            overlayElement.className = "highlight";
-	            app.viewer.addOverlay({
-	                element: overlayElement,
-	                location: new OpenSeadragon.Rect(working.overlay.x, working.overlay.y, working.overlay.width, working.overlay.height)
-	            });
+                  var overlayElement = document.createElement("div");
+                  
+                  overlayElement.id = "overlaytemp";
+                  overlayElement.className = "highlight";
+                  app.viewer.addOverlay({
+                      element: overlayElement,
+                      location: new OpenSeadragon.Rect(working.overlay.x, working.overlay.y, working.overlay.width, working.overlay.height)
+                  });
    
            }
-    	   */
-	    // load annotations
-	    jQuery("#textualbody").val(working.textualbody);
-	    jQuery("#tags").val(working.tags);
-	    
-	    //highlight corresponding canvas
-	    jQuery(".gallery-item").removeClass('active-item');
-	    jQuery(".gallery-item[data-canvas='" + working.canvas + "']").addClass('active-item');
+             */
+          // load annotations
+          jQuery("#textualbody").val(working.textualbody);
+          jQuery("#tags").val(working.tags);
+          
+          //highlight corresponding canvas
+          jQuery(".gallery-item").removeClass('active-item');
+          jQuery(".gallery-item[data-canvas='" + working.canvas + "']").addClass('active-item');
 
-	    	
+                
             //re-populate the url text field with the manifest url for this detail
-	    jQuery("#url").val(app.selections[id].manifest);
+          jQuery("#url").val(app.selections[id].manifest);
 
-	    //populate the output textarea with whatever mode is currently selected
-	    updateOutputURLs();
-	}
-	
-	function loadCanvas(canvas, manifest) {
-	
-	  jQuery(".gallery-item").removeClass('active-item');
-	  
+          //populate the output textarea with whatever mode is currently selected
+          updateOutputURLs();
+      }
+      
+      function loadCanvas(canvas, manifest) {
+      
+        jQuery(".gallery-item").removeClass('active-item');
+        
 
-	    var o = app.canvases[canvas];
-	    
-	    
-	    //var alttext = app.manifests[working.manifest].label.replace("'","&apos;");
-	    var alttext = o.label;
-	    
+          var o = app.canvases[canvas];
+          
+          
+          //var alttext = app.manifests[working.manifest].label.replace("'","&apos;");
+          var alttext = o.label;
+          
             working = {
                 "manifest": manifest,
                 "canvas": canvas,
@@ -947,71 +958,71 @@ function SelectText(element) {
                 "tags":""
             }
                
-	    if (o.version == 3) { working.size = "max"; }
+          if (o.version == 3) { working.size = "max"; }
           
-	    app.viewer.open(working.service+"/info.json");
+          app.viewer.open(working.service+"/info.json");
 
-	    // load annotations
-	    jQuery("#textualbody").val(working.textualbody);
-	    
-	    jQuery("#tags").val(working.tags);
-	    
-	    //highlight corresponding canvas
-	    jQuery(".gallery-item").removeClass('active-item');
-	    jQuery(".gallery-item[data-canvas='" + working.canvas + "']").addClass('active-item');
-	    	
+          // load annotations
+          jQuery("#textualbody").val(working.textualbody);
+          
+          jQuery("#tags").val(working.tags);
+          
+          //highlight corresponding canvas
+          jQuery(".gallery-item").removeClass('active-item');
+          jQuery(".gallery-item[data-canvas='" + working.canvas + "']").addClass('active-item');
+                
             //re-populate the url text field with the manifest url for this detail
-	    jQuery("#url").val(working.manifest);
+          jQuery("#url").val(working.manifest);
 
-	    //populate the output textarea with whatever mode is currently selected
-	    updateOutputURLs();
-	}
-	
+          //populate the output textarea with whatever mode is currently selected
+          updateOutputURLs();
+      }
+      
 
-	/************************************
-	 * 
-	 *********************************/
+      /************************************
+       * 
+       *********************************/
 
-	function addManifest(manifest, item) {
-	
-	    if(app.manifests.indexOf(manifest) > -1) {
-	       alert("This item already exists");
-	    }
-	    else {
-	      app.manifests.push(manifest)
-	
-	      var html = "<div>";
-	      html += "<p class='gallery-manifest-label'>" + item.label + "</p>";
-	      html += "<ul>";
-	    
-	    
-	    
-	      jQuery.each(item.items, function(i, v) {
+      function addManifest(manifest, item) {
+      
+          if(app.manifests.indexOf(manifest) > -1) {
+             alert("This item already exists");
+          }
+          else {
+            app.manifests.push(manifest)
+      
+            var html = "<div>";
+            html += "<p class='gallery-manifest-label'>" + item.label + "</p>";
+            html += "<ul>";
+          
+          
+          
+            jQuery.each(item.items, function(i, v) {
 
-	          app.canvases[v.id] = v;
-	          app.canvases[v.id].manifest = manifest;
-	    
-	          if (v.service != 'error') {
-	              html += "<li class='gallery-item' data-manifest='" + manifest + "' data-canvas='" + v.id + "' alt='image " + i + "'><img alt='" + v.label + "' src='" + v.service + "/full/,200/0/default.jpg'/><div class='gallery-item-label'>" + v.label + " </div></li>";
-	          } else {
-	              html += "<li class='gallery-item' data-manifest='" + v.manifest + "' data-canvas='" + v.canvas + "' alt='image " + i + "'><div class='gallery-item-label'>" + v.label + " </div></li>";
-	          }
-	      });	    
-	      html += "</ul>";
-	      html += "</div>";
-	    
-	      jQuery("#gallery").prepend(html);
-	    }
-	    
-	}
+                app.canvases[v.id] = v;
+                app.canvases[v.id].manifest = manifest;
+          
+                if (v.service != 'error') {
+                    html += "<li class='gallery-item' data-manifest='" + manifest + "' data-canvas='" + v.id + "' alt='image " + i + "'><img alt='" + v.label + "' src='" + v.service + "/full/,200/0/default.jpg'/><div class='gallery-item-label'>" + v.label + " </div></li>";
+                } else {
+                    html += "<li class='gallery-item' data-manifest='" + v.manifest + "' data-canvas='" + v.canvas + "' alt='image " + i + "'><div class='gallery-item-label'>" + v.label + " </div></li>";
+                }
+            });          
+            html += "</ul>";
+            html += "</div>";
+          
+            jQuery("#gallery").prepend(html);
+          }
+          
+      }
 
-	
-	
-	
-	
-	/*************** MODAL ***************/
-	
-	// Get the modal
+      
+      
+      
+      
+      /*************** MODAL ***************/
+      
+      // Get the modal
 var modal = document.getElementById("myModal");
 
 // Get the button that opens the modal
@@ -1048,4 +1059,4 @@ window.onclick = function(event) {
     }
 
 
-	/*************** END MODAL ***************/		
+      /*************** END MODAL ***************/            

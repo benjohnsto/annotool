@@ -11,7 +11,7 @@
 
   <script src="assets/js/jquery.min.js"></script>
   <script src="https://code.jquery.com/ui/1.14.1/jquery-ui.js"></script>
-  <script src="assets/js/converter.js"></script>
+  <script src="assets/js/convert.js"></script>
   
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mini.css/3.0.1/mini-default.min.css">
   
@@ -26,25 +26,25 @@
 
 <body>
 
-<div id="banner" style='display:flex;justify-content:space-between'>
-	  <p class='url-element' style="display:flex;width:50%;padding-left:1em;">
-	    <input type="text" id="url" placeholder="Enter the URL of a IIIF manifest." value="" />
-	    <button id="submit" class="primary" style="">Submit</button>
-	  </p>
-	  <div id='banner-toolbar'>
-	    <a href="#" class="carousel"><i class="bi bi-file-earmark-slides icon"></i></a>
-	    <a href="#" class="sidebar-left"><i class="bi bi-card-list icon"></i></a> 
-            <a href="#" class="sidebar-right"><i class="bi bi-spellcheck icon"></i></a>
-            <a href="#" class="importexport icon"><i class="bi bi-file-text"></i></a>
-	  </div>
+<div id="carousel" class="">
+   <div id="carousel-viewer" style="width:100%;height:100%;"></div>
+   <div id="carousel-viewer-prev" class="shown"><a href="#" class="nextprev prev" rel=""><img src="assets/images/prev.png"></a></div>
+   <div id="carousel-viewer-next" class="shown"><a href="#" class="nextprev next" rel=""><img src="assets/images/next.png"></a></div>
 </div>
 
 
-<div id="main" class="">
+
+<div id="main" class="v2">
     <div id="left">
     
     
         <div id="left-content">
+       
+        
+          <p class='url-element' style="display:flex;width100%;">
+	    <input type="text" id="url" placeholder="Enter the URL of a IIIF manifest." value="" />
+	    <button id="submit" class="primary" style="">Submit</button>
+	  </p>
         
         <!--
 			  <form id="uploadfile" method="post" enctype="multipart/form-data">
@@ -88,21 +88,27 @@
     <div id="middle">
        <div id="viewer-wrap" style="position:relative">
        <div id="viewer"></div>
+       
        <div id="viewer-prev"><a href="#" class="nextprev prev" rel=""><img src='assets/images/prev.png'/></i></a></div>
        <div id="viewer-next"><a href="#" class="nextprev next" rel=""><img src='assets/images/next.png'/></a></div>
        </div>
        <div id="viewer-toolbar">
+	    <a href="#" class="carousel"><i class="bi bi-file-earmark-slides icon"></i></a>
+	    <a href="#" class="sidebar-left"><i class="bi bi-card-list icon"></i></a> 
+            <a href="#" class="sidebar-right"><i class="bi bi-spellcheck icon"></i></a>
+            <a href="#" class="importexport icon"><i class="bi bi-file-text"></i></a>       
          <a href="#" id="crop" class='disabled'><i class="bi bi-crop"></i></a>
-         <a href="#" id="addslide"><i class="bi bi-plus-circle"></i></a>
+         <!--<a href="#" id="addslide"><i class="bi bi-plus-circle"></i></a>-->
        </div>
+
 
     </div>
     
     <div id="right">
       <div id="right-content">
+        <textarea id="textualbody" class='form-control' rows='15' placeholder='Text'></textarea>
         <input id="tags" type='text' class='form-control' placeholder="Tags"/>
-        <textarea id="textualbody" class='form-control' rows='15' placeholder='Text' style='margin-top:1em;'></textarea>
-        <button id="saveannotations" class="btn btn-primary" style="border-radius:5px;">Save</button>
+        <button id="saveannotations" class="btn btn-primary" style="border-radius:5px;">Add</button>
       </div>
     </div>
 
@@ -124,9 +130,18 @@
   <div class="modal-content">
     <span class="close">&times;</span>  
     <p>
+<form enctype="multipart/form-data">
+<input id="upload" type="file" accept="text/json" name="files" size=30>
+</form>
       <textarea id="importexport" style='width:99%;height:300px;'></textarea>
        <a href="#" class="import"><button class='primary'>Import</button></a>
        <a href="#" class="export"><button class='primary'>Export</button></a>
+    </p>
+    
+    <p>
+
+
+<script src="assets/js/upload.js"></script>    
     </p>
   </div>
 </div> 
@@ -145,8 +160,9 @@
   
   <script src="assets/js/openseadragon/openseadragon.min.js"></script>
   <script src="assets/js/annotation.js"></script>
-  <script src="assets/js/functions.js"></script>
-  <script src="assets/js/script.js?v=0.1.8"></script>  
+  <script src="assets/js/functions.js?v=0.0.1"></script>
+  <script src="assets/js/script.js?v=0.1.9"></script>  
+  <script src="assets/js/carousel2.js?v=0.1.9"></script>
   
   
   <!--<script src="assets/js/dropzone.js?v=0.1"></script>-->

@@ -11,14 +11,23 @@
 	    app.viewer = OpenSeadragon({
 	        id: "viewer",
 	        prefixUrl: "assets/js/openseadragon/images/",
-	        tileSources: [],
 	        showFullPageControl: false,
 	        showRotationControl: true,
 	        minZoomLevel: 0.1,
 	        defaultZoomLevel: 0.5,
 	        preserveImageSizeOnResize: true,
-	        sequenceMode: true,
-	        showReferenceStrip: true
+    sequenceMode: true,    
+    showReferenceStrip: true,
+    referenceStripScroll: 'horizontal',
+	        tileSources: [
+        "https://libimages1.princeton.edu/loris/pudl0001%2F4609321%2Fs42%2F00000001.jp2/info.json",
+        "https://libimages1.princeton.edu/loris/pudl0001%2F4609321%2Fs42%2F00000002.jp2/info.json",
+        "https://libimages1.princeton.edu/loris/pudl0001%2F4609321%2Fs42%2F00000003.jp2/info.json",
+        "https://libimages1.princeton.edu/loris/pudl0001%2F4609321%2Fs42%2F00000004.jp2/info.json",
+        "https://libimages1.princeton.edu/loris/pudl0001%2F4609321%2Fs42%2F00000005.jp2/info.json",
+        "https://libimages1.princeton.edu/loris/pudl0001%2F4609321%2Fs42%2F00000006.jp2/info.json",
+        "https://libimages1.princeton.edu/loris/pudl0001%2F4609321%2Fs42%2F00000007.jp2/info.json"
+    ]
 	    });
 	    
 	    
@@ -27,7 +36,7 @@
 	    
 	    
 	    
-
+/*
 
 var data = getQueryVariable("data");
 if((data.length) % 4 == 0) {
@@ -84,5 +93,5 @@ function getQueryVariable(variable) {
   alert('Query Variable ' + variable + ' not found');
 }
 
-
+*/
 
