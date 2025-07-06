@@ -10,6 +10,7 @@ function init() {
 
     if (typeof vars.manifest !== 'undefined') {
         var url = vars.manifest;
+        console.log(vars);
         jQuery("#url").val(url);
         jQuery("#gallery").empty();
       var x = new IIIFConverter();
@@ -68,7 +69,7 @@ tippy('.copyable', {
               showFullPageControl: false,
               showRotationControl: true,
               minZoomLevel: 0.1,
-              defaultZoomLevel: 0.5,
+              defaultZoomLevel: 0.8,
               preserveImageSizeOnResize: true
           });
 
@@ -254,7 +255,7 @@ function getURLValues() {
 
         for (var i = 0, iLen = parts.length; i < iLen; i++) {
             part = parts[i].split('=');
-            values[part[0]] = window.decodeURIComponent(part[1]);
+            values[part[0]] = part[1];//window.decodeURIComponent(part[1]);
         }
     }
     return values;
@@ -611,6 +612,7 @@ function SelectText(element) {
           var x = new IIIFConverter();
             x.load(m, function(data){
               addManifest(m, data);
+              console.log(data);
               buildFilmstrip();
             });
         });
@@ -692,6 +694,9 @@ function SelectText(element) {
         jQuery("#crop").addClass("disabled");
       }
       
+      function filmstripItemHighlight(id, canvas) {
+        jQuery('.filmstrip-item').removeClass('active');
+      }
 
       function enableCrop() {
          jQuery("#crop").addClass("activated");
@@ -718,7 +723,12 @@ function SelectText(element) {
          working.textualbody = jQuery("#textualbody").val();
          working.tags = jQuery("#tags").val();
          toggleRightSidebar();   
-      }            
+      } 
+      
+      function setView(view) {
+       jQuery("#main").removeClass();
+       jQuery("#main").addClass(view);
+      }           
 
       
       function buildCanvasGallery() {
@@ -736,11 +746,42 @@ function SelectText(element) {
       }
       
       
-      
+      function buildFilmstrip() {
+
+         jQuery("#filmstrip-tray").empty();
+         
+         app.items.forEach((item)=>{
+	   var image = "";
+	   if(item.region.indexOf(',') > -1) {
+	     image = item.service + "/"+item.region+"/200,/0/default.jpg";
+	   }
+	   else {
+	     image = item.service + "/full/200,/0/default.jpg";
+	   }
+	   
+	   var alttext = "This is a description";
+	   
+             var slide = `<div id='` + item.id + `' class='filmstrip-item' data-canvas='`+ item.canvas +`'>
+                <div><img src='`+image+`' data-manifest='`+item.manifest+`'/></div>
+                <div class='selectcrop copyable' style='position:absolute;top:0px;left:0px;z-index:-100'>
+                <a href='` + item.manifest + `' title='`+alttext+`' target='_blank'>
+                <img alt='detail of' src='`+image+`' data-manifest='"+manifest+"'/>
+                </a>
+                </div>
+                <span class='filmstrip-item-tools'>
+                 <a href='#' class='copyable'><img src='assets/images/copy.svg' class='icon-sm'/></a>
+                 <a href='#' class='filmstrip-item-metadata'><img src='assets/images/info-circle-white.svg' class='icon-sm'/></a>
+                 <a href='` + image + `' class='filmstrip-item-external' target='_blank'><img src='assets/images/external-white.svg' class='icon-sm'/></a>
+                 <a href='#' class='filmstrip-item-close'><img src='assets/images/x-white.svg' class='icon-sm'/></a></span></div>`;	   
+	   jQuery("#filmstrip-tray").append(slide);
+	   showFilmstrip();
+
+         });
+      }
       
       
 
-      function buildFilmstrip() {
+      function buildFilmstripFromAnnotation() {
 
          jQuery("#filmstrip-tray").empty();
          
@@ -749,8 +790,7 @@ function SelectText(element) {
              var image = "";
              var parts = item.target.id.split("#xywh=");
              var canvas = parts[0];
-             
-             console.log(item);
+
               
              var data = app.canvases[canvas];
              if(parts.length > 1) {
@@ -788,9 +828,31 @@ function SelectText(element) {
       }
       
       
+      function addItem(canvas, manifest) {
+      
+        working.zoom = app.viewer.viewport.getZoom();
+        var osdcenter = app.viewer.viewport.getCenter();
+        working.center = app.viewer.viewport.viewportToImageCoordinates(osdcenter.x, osdcenter.y);
+               
+        var pix = parseInt((working.width * 0.5) * ( 1 / working.zoom ));
+        
+        working.viewportregion = [
+          parseInt(working.center.x) - pix,
+          parseInt(working.center.y) - pix,
+          parseInt(pix * 2),
+          parseInt(pix * 2)
+          ]
+	working.id = makeid();
+         
+        app.items.push(working);
+        console.log(app.items);
+        buildFilmstrip();
+      }
+      
       
       
       function addAnnotation(canvas, manifest) {
+      
 
          
          var item = {
@@ -839,7 +901,6 @@ function SelectText(element) {
         item.body.push(body);                  
 
         app.annoPage.items.push(item);
-        
         buildFilmstrip();
       }
       
@@ -936,7 +997,6 @@ function SelectText(element) {
 
           var o = app.canvases[canvas];
           
-          
           //var alttext = app.manifests[working.manifest].label.replace("'","&apos;");
           var alttext = o.label;
           
@@ -949,7 +1009,7 @@ function SelectText(element) {
                 "size": "full",
                 "rotation": '0',
                 "height": o.height,
-                "width": o.width,   
+                "width": o.width,  
                 "large": o.service + "/full/1200,/0/default.jpg",
                 "small": o.service + "/full/,300/0/default.jpg",
                 "actual": o.service + "/full/full/0/default.jpg",
@@ -959,6 +1019,8 @@ function SelectText(element) {
             }
                
           if (o.version == 3) { working.size = "max"; }
+          
+          working.full = o.service + "/full/"+working.size+"/0/default.jpg",
           
           app.viewer.open(working.service+"/info.json");
 
@@ -989,7 +1051,7 @@ function SelectText(element) {
              alert("This item already exists");
           }
           else {
-            app.manifests.push(manifest)
+            app.manifests.push(manifest);
       
             var html = "<div>";
             html += "<p class='gallery-manifest-label'>" + item.label + "</p>";

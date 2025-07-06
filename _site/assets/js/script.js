@@ -1,183 +1,198 @@
-
-
-
-	var app = {
-	   'viewer': {},
-	   'overlayOn': false,
-	   'manifests': [],
-	   'canvases':{},
-	   'current':{},
-	   'selections':{},
-	   'annoPage':{
-	     "@context": "http://www.w3.org/ns/anno.jsonld",
-	     "id": "http://example.org/page1",
-	     "type": "AnnotationPage",
-	     'items': []
-	   }
-	}
-	
-
-
-	var working = {};
-	
-	
-	function encode() {
-	  var data = JSON.stringify(app.annoPage);
-	  var enc1 = encodeURIComponent(data);
-	  var enc2 = btoa(enc1);
-
-	  return "carousel.html?data="+enc2;
-
-	}
-	
-	
-	/******************
-	 * select a gallery item
-	 ***********************************************************/
-
-	jQuery(document).on("click", ".gallery-item", function(e) {
-
-	    var manifest = jQuery(this).attr('data-manifest');
-	    var canvas =   jQuery(this).attr('data-canvas');
-	    
-	    var data = app.canvases[canvas];
-	    
-	    loadCanvas(canvas, data.manifest);
-	    
-	    // highlight this gallery item
-	    jQuery(".gallery-item").removeClass('active-item');
-	    jQuery(this).addClass('active-item');
-
-	    // un-hilight any tray thumbs that might be highlighted
-	    jQuery(".filmstrip-item").removeClass('active-item');
-
-	    jQuery("#crop").removeClass("activated");
-	    app.selectionMode = false;
-	    app.viewer.setMouseNavEnabled(true);
-	    cropOff();
-	    e.preventDefault();
-	});	
-	
-	
-
-
-	/*************************
-	 * activate or de-activate crop mode
-	 ***********************************/
-
-	jQuery('#crop').click(function() {
-
-
-	    //working = JSON.parse(JSON.stringify(working));
-
-	    if (jQuery("#crop").hasClass("activated")) {
-	      disableCrop();
-	    } else {   
-	      enableCrop();
-	    }
-
-
-	});
-
-	/*************************
-	 * Import
-	 ***********************************/
-        jQuery(".import").click(function(e){
-	  doImport();
-          e.preventDefault();
-        });
-
-	
-
-	/*************************
-	 * Export
-	 ***********************************/
-	jQuery(".export").click(function(e){ 
-          var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(app.annoPage));
-          var dlAnchorElem = document.getElementById('downloadAnchorElem');
-          dlAnchorElem.setAttribute("href",     dataStr     );
-          dlAnchorElem.setAttribute("download", "annotations.json");
-          dlAnchorElem.click();
-	  e.preventDefault();
-	});
-	
-	
-
-	/*********************************
-	 * submit a url
-	 *******************************/
-
-	// submit a url
-	jQuery("#submit").click(function() {
-	    var url = jQuery("#url").val();
-	    app.current.manifest = url;
-	    var x = new IIIFConverter();
-	    x.load(url, function(m){
-	      //ben
-	      addManifest(url, m);
-	    });
-	});
-
-
-       jQuery("#saveannotations").click(function(e){
-	 working.textualbody = jQuery("#textualbody").val();
-	 working.tags = jQuery("#tags").val();
-	 addAnnotation(working.canvas, working.manifest);
-         e.preventDefault();
-       });
-
-
-	/*************************
-	 * add slide
-	 ***********************************/
-
-	jQuery('#addslide').click(function(e) {
-	   working.textualbody = jQuery("#textualbody").val();
-	   working.tags = jQuery("#tags").val();
-	   addAnnotation(working.canvas, working.manifest);
-	   e.preventDefault();
-	});
-	
-	
-
-	
-	
-
-	
-	
-
-	/******************************
-	 *  The three output textarea modes
-	 ********************************/
-
-	jQuery(".setmode").click(function(e) {
-	    var mode = jQuery(this).attr("data-mode");
-	    setMode(mode);
-	});
-
-
-
-	
-	jQuery(".nextprev.prev").click(function(e){
-	  if(Object.keys(app.selections).length > 0) {
-	    var target = jQuery(this).attr('rel');
-	    loadSelection(target);
-	  }
-	  e.preventDefault();
-	});
-	jQuery(".nextprev.next").click(function(e){
-	  if(Object.keys(app.selections).length > 0) {
-	    var target = jQuery(this).attr('rel');
-	    loadSelection(target);
-	  }
-	  e.preventDefault();
-	});
-	
+var app = {
+    'viewer': {},
+    'overlayOn': false,
+    'manifests': [],
+    'canvases': {},
+    'current': {},
+    'selections': {},
+    'annoPage': {
+        "@context": "http://www.w3.org/ns/anno.jsonld",
+        "id": "http://example.org/page1",
+        "type": "AnnotationPage",
+        'items': []
+    },
+    'myManifest': {
+        "@context": "http://iiif.io/api/presentation/3/context.json",
+        "id": makeid(),
+        "type": "Manifest",
+        "label": {
+            "en": [
+                "This is my manifest"
+            ]
+        },
+        "items": []
+    },
+    "label":"",
+    "summary":"",
+    "items":[]
+}
 
 
 
 
-	/******************
+
+
+var working = {};
+
+
+function encode() {
+    var data = JSON.stringify(app.annoPage);
+    var enc1 = encodeURIComponent(data);
+    var enc2 = btoa(enc1);
+
+    return "carousel.html?data=" + enc2;
+
+}
+
+
+/******************
+ * select a gallery item
+ ***********************************************************/
+
+jQuery(document).on("click", ".gallery-item", function(e) {
+
+    var manifest = jQuery(this).attr('data-manifest');
+    var canvas = jQuery(this).attr('data-canvas');
+
+    var data = app.canvases[canvas];
+
+    loadCanvas(canvas, data.manifest);
+
+    // highlight this gallery item
+    jQuery(".gallery-item").removeClass('active-item');
+    jQuery(this).addClass('active-item');
+
+    // un-hilight any tray thumbs that might be highlighted
+    jQuery(".filmstrip-item").removeClass('active-item');
+
+    //jQuery("#crop").removeClass("activated");
+    app.selectionMode = false;
+    app.viewer.setMouseNavEnabled(true);
+    cropOff();
+    e.preventDefault();
+});
+
+
+
+
+/*************************
+ * activate or de-activate crop mode
+ ***********************************/
+
+jQuery('#crop').click(function() {
+
+
+    //working = JSON.parse(JSON.stringify(working));
+
+    if (jQuery("#crop").hasClass("activated")) {
+        disableCrop();
+    } else {
+        enableCrop();
+    }
+
+
+});
+
+/*************************
+ * Import
+ ***********************************/
+jQuery(".import").click(function(e) {
+    doImport();
+    e.preventDefault();
+});
+
+
+
+/*************************
+ * Export
+ ***********************************/
+jQuery(".export").click(function(e) {
+    var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(app.annoPage));
+    var dlAnchorElem = document.getElementById('downloadAnchorElem');
+    dlAnchorElem.setAttribute("href", dataStr);
+    dlAnchorElem.setAttribute("download", "annotations.json");
+    dlAnchorElem.click();
+    e.preventDefault();
+});
+
+
+
+/*********************************
+ * submit a url
+ *******************************/
+
+// submit a url
+jQuery("#submit").click(function() {
+    var url = jQuery("#url").val();
+    app.current.manifest = url;
+    var x = new IIIFConverter();
+    x.load(url, function(m) {
+        //ben
+        addManifest(url, m);
+    });
+});
+
+
+jQuery("#saveannotations").click(function(e) {
+    working.textualbody = jQuery("#textualbody").val();
+    working.tags = jQuery("#tags").val();
+    addAnnotation(working.canvas, working.manifest);
+    addItem(working.canvas, working.manifest);
+    e.preventDefault();
+});
+
+
+/*************************
+ * add slide
+ ***********************************/
+
+jQuery('#addslide').click(function(e) {
+    working.textualbody = jQuery("#textualbody").val();
+    working.tags = jQuery("#tags").val();
+    addItem(working.canvas, working.manifest);
+    e.preventDefault();
+});
+
+
+
+
+
+
+
+
+
+/******************************
+ *  The three output textarea modes
+ ********************************/
+
+jQuery(".setmode").click(function(e) {
+    var mode = jQuery(this).attr("data-mode");
+    setMode(mode);
+});
+
+
+
+
+jQuery(".nextprev.prev").click(function(e) {
+    if (Object.keys(app.selections).length > 0) {
+        var target = jQuery(this).attr('rel');
+        loadSelection(target);
+    }
+    e.preventDefault();
+});
+jQuery(".nextprev.next").click(function(e) {
+    if (Object.keys(app.selections).length > 0) {
+        var target = jQuery(this).attr('rel');
+        loadSelection(target);
+    }
+    e.preventDefault();
+});
+
+
+
+
+
+/******************
 	 * upload a file
 	 ************************************************
             jQuery("#uploadfile").submit(function(e){
@@ -207,85 +222,83 @@
 
 
 
-	/******************
-	 * click on a preview item in the tray
-	 *************************************************/
+/******************
+ * click on a preview item in the tray
+ *************************************************/
 
-	jQuery(document).on("click", ".filmstrip-item", function(e) {
-console.log('this is getting re');
-	  var canvas = jQuery(this).attr('data-canvas');
-	  var data = app.canvases[canvas];
-	  var id = jQuery(this).attr('id');
-	  working.id = id;
-	  
-	  app.viewer.open(data.service + "/info.json");
-	  cropOn();
-	  disableCrop();
+jQuery(document).on("click", ".filmstrip-item", function(e) {
+    var canvas = jQuery(this).attr('data-canvas');
+    var data = app.canvases[canvas];
+    var id = jQuery(this).attr('id');
+    working.id = id;
 
-
-	});
-	
-	
-	/****************************
-	* remove item from preview bar
-	*****************************************/
-	
-	jQuery(document).on("click", ".filmstrip-item-close", function(e) {
-	  e.stopPropagation();
-	  var parent = jQuery(this).parent().parent();
-	  var id = parent.attr('id');
-	  
-	  console.log(id);
-	  
-	  app.annoPage.items.forEach((item, index)=>{
-	    if(item.id == id) {
-	      app.annoPage.items.splice(index, 1)
-	    }
-	  })
-	  buildFilmstrip();
-	  e.preventDefault();
-	});	
+    app.viewer.open(data.service + "/info.json");
+    setView('v2');
+    cropOn();
+    //enableCrop();
+});
 
 
-	jQuery(document).on("click", ".copyable", function(e) {
-	    var containerDiv = jQuery(this).parent().parent().find(".selectcrop");
-	    //Make the container Div contenteditable
-	    containerDiv.attr("contenteditable", true);
-	    //Select the image
-	    SelectText(containerDiv.get(0));
-	    //Execute copy Command
-	    //Note: This will ONLY work directly inside a click listener
-	    document.execCommand('copy');
-	    //Unselect the content
-	    window.getSelection().removeAllRanges();
-	    //Make the container Div uneditable again
-	    containerDiv.removeAttr("contenteditable");
-	    //Success!!
-	    console.log("image copied!");
-	});
+/****************************
+ * remove item from preview bar
+ *****************************************/
 
-	jQuery(".sidebar-right").click(function(e){
-	  toggleRightSidebar();
-	  e.preventDefault();
-	});
+jQuery(document).on("click", ".filmstrip-item-close", function(e) {
+    e.stopPropagation();
+    var parent = jQuery(this).parent().parent();
+    var id = parent.attr('id');
 
-	jQuery(".sidebar-left").click(function(e){
-	  toggleLeftSidebar();
-	  e.preventDefault();
-	});  
+    console.log(id);
+
+    app.annoPage.items.forEach((item, index) => {
+        if (item.id == id) {
+            app.annoPage.items.splice(index, 1)
+        }
+    })
+    buildFilmstrip();
+    e.preventDefault();
+});
 
 
-	jQuery(".carousel").click(function(e){
-	  toggleBothSidebars();
-	  var url = encode();
-	  console.log(url);
-	  window.open(url, '_blank').focus();
-	  e.preventDefault();
-	});  
+jQuery(document).on("click", ".copyable", function(e) {
+    var containerDiv = jQuery(this).parent().parent().find(".selectcrop");
+    //Make the container Div contenteditable
+    containerDiv.attr("contenteditable", true);
+    //Select the image
+    SelectText(containerDiv.get(0));
+    //Execute copy Command
+    //Note: This will ONLY work directly inside a click listener
+    document.execCommand('copy');
+    //Unselect the content
+    window.getSelection().removeAllRanges();
+    //Make the container Div uneditable again
+    containerDiv.removeAttr("contenteditable");
+    //Success!!
+    console.log("image copied!");
+});
 
-        jQuery(".importexport").click(function(e){
-          jQuery("#importexport").val(JSON.stringify(app.annoPage, null, 2));
-	  openModal('myModal');
-	  
-	});
+jQuery(".sidebar-right").click(function(e) {
+    toggleRightSidebar();
+    e.preventDefault();
+});
 
+jQuery(".sidebar-left").click(function(e) {
+    toggleLeftSidebar();
+    e.preventDefault();
+});
+
+
+jQuery(".carousel").click(function(e) {
+    toggleBothSidebars();
+    var url = encode();
+    console.log(url);
+    window.open(url, '_blank').focus();
+    e.preventDefault();
+});
+
+jQuery(".importexport").click(function(e) {
+    jQuery("#importexport").val(JSON.stringify(app.annoPage, null, 2));
+    var x = new Manifest(app.items);
+    openModal('myModal');
+
+});

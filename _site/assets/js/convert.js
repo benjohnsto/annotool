@@ -137,7 +137,10 @@ class IIIFConverter {
                                 "id": "",
                                 "label": "",
                                 "service": "",
-                                "type": 2
+                                "type": 2,
+                                "version": 2,
+                                "width": canvas.images[0].resource.width,
+                                "height": canvas.images[0].resource.height
                             }
                             imageobj.id = canvasID;
                             imageobj.label = canvas.label;
@@ -180,9 +183,13 @@ class IIIFConverter {
 
                     var imageobj = {
                         "id": "",
+                        "canvas": canvasID,
                         "label": "",
                         "service": "",
-                        "type": ""
+                        "type": "",
+                        "version": 3,
+                        "width": item.items[0].body.width,
+                        "height": item.items[0].body.height
                     }
 
                     imageobj.id = canvasID;
@@ -232,29 +239,6 @@ class IIIFConverter {
                     }
                     // end service ------------------------------
 
-
-                    // thumb
-                    if (item.thumbnail) {
-                        switch (typeof item.thumbnail) {
-                            case 'object':
-                                //console.log('object');
-                                if (item.thumbnail[0]) {
-                                    imageobj.thumb = item.thumbnail[0].id
-                                } else {
-                                    imageobj.thumb = item.thumbnail.id;
-                                }
-                                break;
-                            case 'array':
-                                //console.log('array');
-                                imageobj.thumb = item.thumbnail[0];
-                                break;
-                            default: //string
-                                imageobj.thumb = item.thumbnail;
-                        }
-                    } else {
-                        imageobj.thumb = imageobj.service + "/full/!150,150/0/default.jpg";
-                    }
-                    // end thumb ------------------------------
 
                     // add this image to the images array
                     this.items.push(imageobj);
