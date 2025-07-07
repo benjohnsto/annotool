@@ -20,9 +20,8 @@ class IIIFConverter {
             })
             .then(manifest => {
             
-                if ("@type" in manifest) {
-
-
+            
+                if (manifest['@type']) {
                     switch (manifest['@type']) {
                         case "sc.Collection":
                             this.version = 2;
@@ -41,7 +40,7 @@ class IIIFConverter {
                 // version 3
                 else if (manifest.type) {
 
-                    switch (this.type) {
+                    switch (manifest.type) {
                         case "Collection":
                             this.version = 3;
                             this.parsev3Collection(manifest);
@@ -180,7 +179,7 @@ class IIIFConverter {
                 var canvasID = item.id;
 
                 if (item.items) {
-
+                
                     var imageobj = {
                         "id": "",
                         "canvas": canvasID,
@@ -188,8 +187,8 @@ class IIIFConverter {
                         "service": "",
                         "type": "",
                         "version": 3,
-                        "width": item.items[0].body.width,
-                        "height": item.items[0].body.height
+                        "width": item.items[0].items[0].body.width,
+                        "height": item.items[0].items[0].body.height
                     }
 
                     imageobj.id = canvasID;

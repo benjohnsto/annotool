@@ -10,7 +10,6 @@ function init() {
 
     if (typeof vars.manifest !== 'undefined') {
         var url = vars.manifest;
-        console.log(vars);
         jQuery("#url").val(url);
         jQuery("#gallery").empty();
       var x = new IIIFConverter();
@@ -68,8 +67,6 @@ tippy('.copyable', {
               tileSources: [],
               showFullPageControl: false,
               showRotationControl: true,
-              minZoomLevel: 0.1,
-              defaultZoomLevel: 0.8,
               preserveImageSizeOnResize: true
           });
 
@@ -97,7 +94,6 @@ tippy('.copyable', {
               element: app.viewer.element,
               pressHandler: function(event) {
 
-
                   if (!app.selectionMode) {
                       return;
                   }
@@ -119,7 +115,6 @@ tippy('.copyable', {
                       overlayElement: overlayElement,
                       startPos: viewportPos
                   };
-
 
               },
               dragHandler: function(event) {
@@ -146,6 +141,7 @@ tippy('.copyable', {
                   //var h = app.viewer.tileSources[0].height;
                   var w = app.viewer.world.getItemAt(0).source.dimensions.x;
                   var h = app.viewer.world.getItemAt(0).source.dimensions.y;
+                  
                   region = [
                       Math.floor(location.x * w),
                       Math.floor(location.y * w),
@@ -167,19 +163,28 @@ tippy('.copyable', {
                   
                   working.overlay = location;
                   
-                // update current
-                working.region = region.join(',');
-                
-                working.large = working.service + "/" + region.join(',') + "/1200,/" + working.rotation + "/default.jpg";
-                working.small = working.service + "/" + region.join(',') + "/,300/" + working.rotation + "/default.jpg";
-                working.actual = working.service + "/" + region.join(',') + "/"+overlayHeight+"/" + working.rotation + "/default.jpg";
-                working.html = "<img alt='detail' src='" + working.small + "' data-manifest='" + working.manifest + "'/>";
+                  // update current
+                  working.region = region.join(',');  
+                  working.large = working.service + "/" + region.join(',') + "/1200,/" + working.rotation + "/default.jpg";
+                  working.small = working.service + "/" + region.join(',') + "/,300/" + working.rotation + "/default.jpg";
+                  working.actual = working.service + "/" + region.join(',') + "/"+overlayHeight+"/" + working.rotation + "/default.jpg";
+                  working.html = "<img alt='detail' src='" + working.small + "' data-manifest='" + working.manifest + "'/>";
 
-                  updateOutputURLs();
+                 // updateOutputURLs();
               },
               releaseHandler: function(event) {
 
                   if (app.selectionMode == true) {
+
+               
+ /*              
+                  for(id in app.items) {
+                    if(id == working.id) {
+                      app.items[id] = working;
+                      //item.target.id += "#xywh=" + working.region;
+                    }
+                  };                  
+                  
 
                   app.annoPage.items.forEach((item)=>{
                     if(item.id == working.id) {
@@ -187,9 +192,12 @@ tippy('.copyable', {
                       item.target.id += "#xywh=" + working.region;
                     }
                   });
-
+*/
                   buildFilmstrip();
-
+                  
+                  var img = {'type':'image','url': working.large}
+		  app.viewer.open(img);
+		  cropOff();
                       //manifest_url = jQuery(".gallery-item-active").attr('data-manifest');
 
                       // add info to the selections array
@@ -211,11 +219,8 @@ tippy('.copyable', {
 
                       jQuery("#output").attr('data-mode', 'actual');
                       setMode('large');
-                      updateOutputURLs();
-             
-                      
-                      
-                      
+                      //updateOutputURLs();
+
                   }
 
                   drag = null;
@@ -606,13 +611,11 @@ function SelectText(element) {
         app.manifests = [];
         jQuery("#gallery").empty();
         
-        console.log(app.annoPage);
-        
+       
         manifests.forEach((m)=>{           
           var x = new IIIFConverter();
             x.load(m, function(data){
               addManifest(m, data);
-              console.log(data);
               buildFilmstrip();
             });
         });
@@ -677,12 +680,15 @@ function SelectText(element) {
 
 
       function resequenceSelections() {
-        var newselections = {};
+        var newitems = [];
         jQuery(".filmstrip-item").each(function(i,v){
            var id = jQuery(v).attr('id');
-           newselections[id] = app.selections[id];
+           jQuery.each(app.items, function(i,v){
+             if(v.id === id) { newitems.push(v); }
+           });
         });
-        app.selections = newselections;
+        app.items = newitems;
+        
       }
       
       
@@ -750,21 +756,24 @@ function SelectText(element) {
 
          jQuery("#filmstrip-tray").empty();
          
-         app.items.forEach((item)=>{
+         console.log(app.items);
+        
+         for(id in app.items) {
+         
 	   var image = "";
-	   if(item.region.indexOf(',') > -1) {
-	     image = item.service + "/"+item.region+"/200,/0/default.jpg";
+	   if(app.items[id].region.indexOf(',') > -1) {
+	     image = app.items[id].service + "/"+app.items[id].region+"/200,/0/default.jpg";
 	   }
 	   else {
-	     image = item.service + "/full/200,/0/default.jpg";
+	     image = app.items[id].service + "/full/200,/0/default.jpg";
 	   }
 	   
 	   var alttext = "This is a description";
 	   
-             var slide = `<div id='` + item.id + `' class='filmstrip-item' data-canvas='`+ item.canvas +`'>
-                <div><img src='`+image+`' data-manifest='`+item.manifest+`'/></div>
+             var slide = `<div id='` + id + `' class='filmstrip-item' data-canvas='`+ app.items[id].canvas +`'>
+                <div><img src='`+image+`' data-manifest='`+app.items[id].manifest+`'/></div>
                 <div class='selectcrop copyable' style='position:absolute;top:0px;left:0px;z-index:-100'>
-                <a href='` + item.manifest + `' title='`+alttext+`' target='_blank'>
+                <a href='` + app.items[id].manifest + `' title='`+alttext+`' target='_blank'>
                 <img alt='detail of' src='`+image+`' data-manifest='"+manifest+"'/>
                 </a>
                 </div>
@@ -776,7 +785,7 @@ function SelectText(element) {
 	   jQuery("#filmstrip-tray").append(slide);
 	   showFilmstrip();
 
-         });
+         }
       }
       
       
@@ -830,6 +839,7 @@ function SelectText(element) {
       
       function addItem(canvas, manifest) {
       
+      /*
         working.zoom = app.viewer.viewport.getZoom();
         var osdcenter = app.viewer.viewport.getCenter();
         working.center = app.viewer.viewport.viewportToImageCoordinates(osdcenter.x, osdcenter.y);
@@ -842,10 +852,11 @@ function SelectText(element) {
           parseInt(pix * 2),
           parseInt(pix * 2)
           ]
-	working.id = makeid();
-         
-        app.items.push(working);
-        console.log(app.items);
+       */
+        var identifier = makeid();
+        app.items[identifier] = structuredClone(working);
+        //app.items[identifier] = working;
+        app.items[identifier].id = identifier;
         buildFilmstrip();
       }
       

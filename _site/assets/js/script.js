@@ -24,7 +24,7 @@ var app = {
     },
     "label":"",
     "summary":"",
-    "items":[]
+    "items":{}
 }
 
 
@@ -136,8 +136,7 @@ jQuery("#submit").click(function() {
 jQuery("#saveannotations").click(function(e) {
     working.textualbody = jQuery("#textualbody").val();
     working.tags = jQuery("#tags").val();
-    addAnnotation(working.canvas, working.manifest);
-    addItem(working.canvas, working.manifest);
+    // not sure how to save this
     e.preventDefault();
 });
 
@@ -230,7 +229,8 @@ jQuery(document).on("click", ".filmstrip-item", function(e) {
     var canvas = jQuery(this).attr('data-canvas');
     var data = app.canvases[canvas];
     var id = jQuery(this).attr('id');
-    working.id = id;
+    
+    working = app.items[id];
 
     app.viewer.open(data.service + "/info.json");
     setView('v2');
