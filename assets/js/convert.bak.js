@@ -290,7 +290,7 @@ class IIIFConverter {
                     } else {
                         label = x;
                     }
-                } else if (typeof v.label === Array) {
+                } else if (typeof v.label === "array") {
                     label = v.label[0];
                 } else if (typeof v.label === "string") {
                     label = v.label;
@@ -305,7 +305,7 @@ class IIIFConverter {
                     } else {
                         value = x;
                     }
-                } else if (typeof v.value === Array) {
+                } else if (typeof v.value === "array") {
                     value = v.value[0];
                 } else if (typeof v.value === "string") {
                     value = v.value;
@@ -323,75 +323,6 @@ class IIIFConverter {
         })
 
         return a;
-    }
-    
-    
-    
-    
-    
-    addCanvas(id,width,height,service, version, text) {
-    var o = {
-      "id": id+"/canvas-1",
-      "type": "Canvas",
-      "height": height,
-      "width": width,
-      "items": [
-        {
-          "id": id+"/canvas-1/annopage-1",
-          "type": "AnnotationPage",
-          "items": [
-            {
-              "id": id+"/canvas-1/annopage-1/anno-1",
-              "type": "Annotation",
-              "motivation": "painting",
-              "body": {
-                "id": service + "/full/max/0/default.jpg",
-                "type": "Image",
-                "format": "image/jpeg",
-                "height": height,
-                "width": width,
-                "service": [
-                  {
-                    "id": service,
-                    "profile": "level1",
-                    "type": "ImageService"+version
-                  }
-                ]
-              },
-              "target": id+"/canvas-1"
-            }
-          ]
-        }
-      ],
-      "annotations": [
-        {
-          "id": id+"/canvas-1/annopage-2",
-          "type": "AnnotationPage",
-          "items": [
-            {
-              "id": id+"/canvas-1/annopage-2/anno-1",
-              "type": "Annotation",
-              "motivation": "commenting",
-              "body": {
-                "type": "TextualBody",
-                "language": "de",
-                "format": "text/plain",
-                "value": text
-              },
-              "target": id+"/canvas-1"
-            }
-          ]
-        }
-      ]
-    }
-    
-    return o;
-    }
-    
-    reconstruct() {
-      console.log(this);
-      var o = {'id': this.id, 'type': this.type, 'label': this.label, 'summary': this.summary, 'items': this.items}
-      return o;
     }
 
 

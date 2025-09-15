@@ -193,6 +193,7 @@ tippy('.copyable', {
                     }
                   });
 */
+		  jQuery("#region").val(working.region);
                   buildFilmstrip();
                   
                   var img = {'type':'image','url': working.large}

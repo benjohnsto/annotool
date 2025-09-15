@@ -53,6 +53,9 @@ jQuery(document).on("click", ".gallery-item", function(e) {
 
     var manifest = jQuery(this).attr('data-manifest');
     var canvas = jQuery(this).attr('data-canvas');
+    
+    jQuery("#manifest").val(manifest);
+    jQuery("#canvas").val(canvas);
 
     var data = app.canvases[canvas];
 
@@ -61,10 +64,10 @@ jQuery(document).on("click", ".gallery-item", function(e) {
     // highlight this gallery item
     jQuery(".gallery-item").removeClass('active-item');
     jQuery(this).addClass('active-item');
-
+    
     // un-hilight any tray thumbs that might be highlighted
     jQuery(".filmstrip-item").removeClass('active-item');
-
+   
     //jQuery("#crop").removeClass("activated");
     app.selectionMode = false;
     app.viewer.setMouseNavEnabled(true);
@@ -127,7 +130,7 @@ jQuery("#submit").click(function() {
     app.current.manifest = url;
     var x = new IIIFConverter();
     x.load(url, function(m) {
-        //ben
+        console.log(m);
         addManifest(url, m);
     });
 });
@@ -136,6 +139,13 @@ jQuery("#submit").click(function() {
 jQuery("#saveannotations").click(function(e) {
     working.textualbody = jQuery("#textualbody").val();
     working.tags = jQuery("#tags").val();
+    
+    jQuery("#region").val("");
+    jQuery("#manifest").val("");
+    jQuery("#canvas").val("");
+    jQuery("#textualbody").val("");
+    jQuery("#tags").val("");
+    
     // not sure how to save this
     e.preventDefault();
 });
@@ -154,7 +164,10 @@ jQuery('#addslide').click(function(e) {
 
 
 
+function saveSelections() {
 
+
+}
 
 
 
@@ -231,6 +244,19 @@ jQuery(document).on("click", ".filmstrip-item", function(e) {
     var id = jQuery(this).attr('id');
     
     working = app.items[id];
+    
+    console.log(working);
+    jQuery("#region").val(working.region);
+    jQuery("#manifest").val(working.manifest);
+    jQuery("#canvas").val(working.canvas);
+    jQuery("#textualbody").val(working.textualbody);
+    jQuery("#tags").val(working.tags);
+    
+    // un-hilight any tray thumbs that might be highlighted
+    jQuery(".filmstrip-item").removeClass('active-item');
+    jQuery(this).addClass('active-item');
+    
+    console.log(app);    
 
     app.viewer.open(data.service + "/info.json");
     setView('v2');
@@ -298,7 +324,19 @@ jQuery(".carousel").click(function(e) {
 
 jQuery(".importexport").click(function(e) {
     jQuery("#importexport").val(JSON.stringify(app.annoPage, null, 2));
-    var x = new Manifest(app.items);
+    var x = new IIIFConverter();
+    x.id = "lskdjflskjdlskjdflskjd";
+    x.type='Manifest';
+    x.label='My Label';
+    x.summary = 'This is my summary';
+    /*
+    for(i in app.items) {
+      x.items.push(x.addCanvas('lksdjlfskjdlskjdlskjdf',i.width,i.height,i.service,i.version, i.text));
+    }
+
+    console.log(x.reconstruct());
+    */
+    jQuery("#importexport").val(JSON.stringify(app.items));
     openModal('myModal');
 
 });
